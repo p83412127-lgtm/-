@@ -86,18 +86,9 @@ var TREE={label:'神經系統',c:'gray',children:[
 {label:'混合神經',children:[{leaf:['第 5、7、9、10 對']}]}]},
 {label:'脊神經',sub:'31 對',children:[{leaf:['頸 8、胸 12、腰 5','薦 5、尾 1']}]}]}]};
 var QS=[
-{q:'中樞神經系統包含哪兩部分？',o:['腦神經與脊神經','腦與脊髓','大腦與小腦','感覺神經與運動神經'],a:1,ex:'中樞神經系統包含腦與脊髓（書 7-3）。'},
-{q:'周邊神經系統涵蓋下列何者？',o:['腦與脊髓','視丘與下視丘','12 對腦神經與 31 對脊神經','白質與灰質'],a:2,ex:'周邊神經系統涵蓋 12 對腦神經與 31 對脊神經（書 7-3）。'},
-{q:'下列何者「不」屬於腦幹？',o:['中腦','橋腦','小腦','延腦'],a:2,ex:'腦幹包含中腦、橋腦、延腦；小腦是腦的另一個部分（書 7-3～7-5，表 7-1）。'},
-{q:'間腦包含哪兩個構造？',o:['中腦、橋腦','前角、後角','視丘、下視丘','額葉、頂葉'],a:2,ex:'間腦包含視丘與下視丘（書 7-4，表 7-1）。'},
-{q:'負責協調肢體活動、快而技巧性運動配合的是？',o:['大腦','視丘','延腦','小腦'],a:3,ex:'小腦負責協調肢體活動、快而技巧性運動配合（書 7-5，表 7-1 續）。'},
-{q:'脊髓白質中的上行徑（又稱感覺徑），傳導的是？',o:['運動訊息','感覺訊息','感覺與運動訊息皆有','兩者皆非'],a:1,ex:'白質分上行徑（感覺徑）與下行徑（運動徑）（書 7-5）。'},
-{q:'脊髓灰質可分為哪三個部分？',o:['額葉、頂葉、枕葉','中腦、橋腦、延腦','上行徑、下行徑、混合徑','前角、後角、側角'],a:3,ex:'灰質呈 H 形，分前角、後角、側角（書 7-5）。'},
-{q:'脊神經共有幾對？',o:['12','24','31','43'],a:2,ex:'脊神經共 31 對：頸 8、胸 12、腰 5、薦 5、尾 1（書 7-3、7-17）。'},
-{q:'脊神經中，胸神經有幾對？',o:['5','12','8','1'],a:1,ex:'頸 8、胸 12、腰 5、薦 5、尾 1 對（書 7-17）。'},
-{q:'第 8 對腦神經（聽神經）屬於哪一類？',o:['運動神經','感覺神經','混合神經','皆非'],a:1,ex:'感覺神經為第 1、2、8 對（書 7-18，Box 7-7）。'},
-{q:'下列哪一對腦神經屬於混合神經？',o:['第 2 對','第 3 對','第 5 對','第 11 對'],a:2,ex:'混合神經為第 5、7、9、10 對（書 7-18，Box 7-7）。'},
-{q:'屬於運動神經的腦神經是？',o:['第 1、2、8 對','第 3、4、6、11、12 對','第 5、7、9、10 對','第 3、5、7 對'],a:1,ex:'運動神經為第 3、4、6、11、12 對（書 7-18，Box 7-7）。'}];
+{q:'中樞神經系統包含哪些？（可複選）',o:['腦','脊髓','腦神經','脊神經'],a:[0,1],multi:true,ex:'中樞神經系統包含腦與脊髓；腦神經與脊神經屬於周邊神經系統（書 7-3）。'},
+{q:'腦神經共有幾對？',o:['11','12','13','14'],a:1,ex:'腦神經共 12 對（書 7-3、7-18）。'},
+{q:'反射的路徑「不會」經過下列何者？',o:['下視丘','受器','運動神經元','肌肉'],a:0,ex:'反射弧：受器 → 感覺神經元 → 脊髓（整合）→ 運動神經元 → 效應器（肌肉）。不需經過下視丘。'}];
 var XS=[16,124,262,398,520],WS=[84,112,108,96,140],PITCH=50;
 function esc(s){return String(s).replace(/[&<>"]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]})}
 function walk(n,d,c,path){n._d=d;n._id=path;n.c=n.c||c;(n.children||[]).forEach(function(k,i){walk(k,d+1,n.c,path+'.'+i)})}
@@ -124,8 +115,8 @@ el.querySelectorAll('.nd.exp').forEach(function(g){g.addEventListener('click',fu
 /* ===== 設定（老師可改）===== */
 var CFG={
  ACTION:'https://docs.google.com/forms/d/e/1FAIpQLSemLq_DEk8FMTlC4uzTdchEAOR0lbI51gy6Y3knMDR5qLZjNw/formResponse',
- CODE_ENTRY:'entry.752941060',
- Q_ENTRY:['1292166628','1087594610','2091967742','1992590326','1040362156','451874049','1705058640','1527488243','18868704','334949518','137005945','724439665'],
+ CODE_ENTRY:'entry.980922530',
+ Q_ENTRY:['1684540105','35132532','1581974934'],
  SHOW_ANSWER_AFTER_SUBMIT:true   // 設成 false：學生送出後不顯示對錯與解析，留到課堂上公布
 };
 var LET=['A','B','C','D'];
@@ -148,31 +139,38 @@ document.addEventListener('keydown',function(e){if(location.hash!=='#tree')retur
 function renderHome(){
  app.innerHTML='<h1>神經系統複習</h1><div class="sub">身體檢查與評估　第 7 章</div><div class="home"><button onclick="location.hash=\'tree\'"><b>老師／投影</b><br><span class="sub">樹狀圖，逐層展開</span></button><button onclick="location.hash=\'quiz\'"><b>學生作答</b><br><span class="sub">12 題，免登入，填代號即可</span></button></div>';
 }
+function isMulti(q){return !!q.multi}
+function answered(i){var v=S.ans[i];return QS[i].multi?(v&&v.length>0):(v!==undefined&&v!==null)}
+function isRight(i){var q=QS[i],v=S.ans[i];if(!answered(i))return false;if(q.multi){var x=v.slice().sort().join(),y=q.a.slice().sort().join();return x===y}return v===q.a}
+function txtOf(q,v){if(q.multi)return (v||[]).slice().sort().map(function(j){return LET[j]+'. '+q.o[j]}).join('、')||'未答';return v===undefined?'未答':LET[v]+'. '+q.o[v]}
+function corrOf(q){return q.multi?txtOf(q,q.a):LET[q.a]+'. '+q.o[q.a]}
+function isSel(i,j){var v=S.ans[i];return QS[i].multi?(v||[]).indexOf(j)>=0:v===j}
 function renderQuiz(){
- var a=S.ans,done=a.filter(function(x){return x!==undefined&&x!==null}).length;
+ var done=0;QS.forEach(function(q,i){if(answered(i))done++});
  var h='<h1>神經系統複習測驗</h1><div class="sub">不用登入。請填代號或學號（例如 P01），不要填真實姓名。</div>';
  if(S.sent){
-  var ok=0;QS.forEach(function(q,i){if(a[i]===q.a)ok++});
+  var ok=0;QS.forEach(function(q,i){if(isRight(i))ok++});
   h+='<div class="card"><h2>已送出，謝謝！</h2>'+(CFG.SHOW_ANSWER_AFTER_SUBMIT?'<div class="sub">代號：'+esc(S.code)+'　答對 '+ok+' / '+QS.length+' 題</div>':'<div class="sub">代號：'+esc(S.code)+'。答案會在課堂上公布。</div>')+'</div>';
-  if(CFG.SHOW_ANSWER_AFTER_SUBMIT){QS.forEach(function(q,i){var good=a[i]===q.a;h+='<div class="card"><div class="qn">第 '+(i+1)+' 題 <span class="'+(good?'tick':'cross')+'">'+(good?'✓ 答對':'✗ 答錯')+'</span></div><div class="q" style="font-size:18px">'+esc(q.q)+'</div><div class="sub">你的答案：'+(a[i]===undefined?'未答':LET[a[i]]+'. '+esc(q.o[a[i]]))+'</div><div class="sub">正確答案：'+LET[q.a]+'. '+esc(q.o[q.a])+'</div><div class="ex">'+esc(q.ex)+'</div></div>'})}
+  if(CFG.SHOW_ANSWER_AFTER_SUBMIT){QS.forEach(function(q,i){var good=isRight(i);h+='<div class="card"><div class="qn">第 '+(i+1)+' 題 <span class="'+(good?'tick':'cross')+'">'+(good?'✓ 答對':'✗ 答錯')+'</span></div><div class="q" style="font-size:18px">'+esc(q.q)+'</div><div class="sub">你的答案：'+esc(txtOf(q,S.ans[i]))+'</div><div class="sub">正確答案：'+esc(corrOf(q))+'</div><div class="ex">'+esc(q.ex)+'</div></div>'})}
   h+='<div class="bar"><a href="#" class="sub">回首頁</a></div>';app.innerHTML=h;return;
  }
  h+='<div class="card"><label for="code"><b>代號或學號</b></label><br><input type="text" id="code" autocomplete="off" maxlength="30" value="'+esc(S.code)+'" placeholder="例如 P01"></div>';
- QS.forEach(function(q,i){h+='<div class="card"><div class="qn">第 '+(i+1)+' / '+QS.length+' 題</div><div class="q" style="font-size:19px">'+esc(q.q)+'</div>'+q.o.map(function(t,j){return'<button class="opt big'+(a[i]===j?' sel':'')+'" data-q="'+i+'" data-o="'+j+'"><span class="txt"><span>'+LET[j]+'. '+esc(t)+'</span></span></button>'}).join('')+'</div>'});
+ QS.forEach(function(q,i){h+='<div class="card"><div class="qn">第 '+(i+1)+' / '+QS.length+' 題'+(q.multi?'　（可複選）':'')+'</div><div class="q" style="font-size:19px">'+esc(q.q)+'</div>'+q.o.map(function(t,j){return'<button class="opt big'+(isSel(i,j)?' sel':'')+'" data-q="'+i+'" data-o="'+j+'"><span class="txt"><span>'+(q.multi?(isSel(i,j)?'☑ ':'☐ '):'')+LET[j]+'. '+esc(t)+'</span></span></button>'}).join('')+'</div>'});
  h+='<div class="sticky"><div class="hint">已作答 '+done+' / '+QS.length+(S.err?'　<span class="cross">'+esc(S.err)+'</span>':'')+'</div><button class="pri big" id="sub"'+(S.sending?' disabled':'')+'>'+(S.sending?'送出中…':'送出答案')+'</button></div>';
  var y=window.scrollY;app.innerHTML=h;window.scrollTo(0,y);
- app.querySelectorAll('.opt').forEach(function(b){b.onclick=function(){S.code=document.getElementById('code').value;S.ans[+b.dataset.q]=+b.dataset.o;S.err='';renderQuiz()}});
+ app.querySelectorAll('.opt').forEach(function(b){b.onclick=function(){S.code=document.getElementById('code').value;var i=+b.dataset.q,j=+b.dataset.o;
+  if(QS[i].multi){var v=S.ans[i]||[],k=v.indexOf(j);if(k>=0)v.splice(k,1);else v.push(j);S.ans[i]=v}else S.ans[i]=j;S.err='';renderQuiz()}});
  document.getElementById('code').oninput=function(e){S.code=e.target.value};
  document.getElementById('sub').onclick=submit;
 }
 function submit(){
  S.code=document.getElementById('code').value.trim();
  if(!S.code){S.err='請先填代號或學號';renderQuiz();return}
- var miss=[];QS.forEach(function(q,i){if(S.ans[i]===undefined||S.ans[i]===null)miss.push(i+1)});
+ var miss=[];QS.forEach(function(q,i){if(!answered(i))miss.push(i+1)});
  if(miss.length){S.err='還有題目沒答：第 '+miss.join('、')+' 題';renderQuiz();return}
  S.sending=true;S.err='';renderQuiz();
  var p=new URLSearchParams();p.append(CFG.CODE_ENTRY,S.code);
- QS.forEach(function(q,i){p.append('entry.'+CFG.Q_ENTRY[i],q.o[S.ans[i]])});
+ QS.forEach(function(q,i){if(q.multi)S.ans[i].slice().sort().forEach(function(j){p.append('entry.'+CFG.Q_ENTRY[i],q.o[j])});else p.append('entry.'+CFG.Q_ENTRY[i],q.o[S.ans[i]])});
  p.append('fvv','1');p.append('pageHistory','0');
  fetch(CFG.ACTION,{method:'POST',mode:'no-cors',body:p}).then(function(){S.sending=false;S.sent=true;window.scrollTo(0,0);renderQuiz()}).catch(function(){S.sending=false;S.err='送出失敗，請確認網路後再按一次';renderQuiz()});
 }
