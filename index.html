@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>神經系統複習：樹狀圖與課堂作答</title>
+<style>
+:root{--bg:#fff;--fg:#1f1e1d;--mut:#6b6a66;--line:#d3d1c7;--card:#f6f5f1;--acc:#534AB7;--accfg:#fff;--ok:#3B6D11;--okbg:#EAF3DE;--bad:#A32D2D;--badbg:#FCEBEB;
+--gf:#F1EFE8;--gs:#5F5E5A;--gt:#444441;--pf:#EEEDFE;--ps:#534AB7;--pt:#3C3489;--tf:#E1F5EE;--ts:#0F6E56;--tt:#085041;--lf:#fff;--ls:#B4B2A9;--lt:#444441}
+@media (prefers-color-scheme:dark){:root{--bg:#1f1e1d;--fg:#ece9e0;--mut:#a8a69d;--line:#444441;--card:#2b2a28;--acc:#AFA9EC;--accfg:#26215C;--ok:#C0DD97;--okbg:#27500A;--bad:#F7C1C1;--badbg:#791F1F;
+--gf:#444441;--gs:#B4B2A9;--gt:#D3D1C7;--pf:#3C3489;--ps:#AFA9EC;--pt:#CECBF6;--tf:#085041;--ts:#5DCAA5;--tt:#9FE1CB;--lf:#2b2a28;--ls:#5F5E5A;--lt:#D3D1C7}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);font-family:system-ui,"Noto Sans TC","PingFang TC","Microsoft JhengHei",sans-serif;line-height:1.6}
+#app{max-width:1100px;margin:0 auto;padding:16px}
+h1{font-size:22px;font-weight:500;margin:0 0 4px}
+h2{font-size:18px;font-weight:500;margin:0 0 8px}
+.sub{color:var(--mut);font-size:14px}
+.bar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:12px 0}
+button{font:inherit;cursor:pointer;border:1px solid var(--line);background:var(--card);color:var(--fg);border-radius:8px;padding:8px 14px}
+button:hover{border-color:var(--acc)}
+button.pri{background:var(--acc);color:var(--accfg);border-color:var(--acc)}
+button.on{border-color:var(--acc);box-shadow:inset 0 0 0 1px var(--acc)}
+button:disabled{opacity:.5;cursor:default}
+.card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:16px;margin:12px 0}
+.home{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px;margin-top:16px}
+.home button{padding:24px;font-size:18px;text-align:left}
+.err{background:var(--badbg);color:var(--bad);border-radius:8px;padding:8px 12px;margin:8px 0;font-size:14px}
+.note{background:var(--card);border-radius:8px;padding:8px 12px;margin:8px 0;font-size:14px;color:var(--mut)}
+.pills{display:flex;flex-wrap:wrap;gap:6px}
+.pills button{min-width:40px;padding:6px 10px}
+.pills .live{position:relative}
+.pills .live::after{content:"";position:absolute;top:3px;right:3px;width:7px;height:7px;border-radius:50%;background:var(--ok)}
+.q{font-size:22px;font-weight:500;margin:8px 0 12px}
+.opt{display:block;width:100%;text-align:left;margin:8px 0;padding:12px 14px;position:relative;overflow:hidden;font-size:18px}
+.opt .fill{position:absolute;left:0;top:0;bottom:0;background:var(--pf);opacity:.7;z-index:0}
+.opt .txt{position:relative;z-index:1;display:flex;justify-content:space-between;gap:12px}
+.opt.right{border-color:var(--ok);background:var(--okbg)}
+.opt.wrong{border-color:var(--bad)}
+.opt.sel{border-color:var(--acc);box-shadow:inset 0 0 0 2px var(--acc)}
+.ex{margin-top:8px;font-size:15px}
+table{border-collapse:collapse;width:100%;font-size:14px}
+th,td{border-bottom:1px solid var(--line);padding:6px 8px;text-align:left}
+input[type=text]{font:inherit;padding:10px 12px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--fg);width:100%;max-width:260px}
+svg{width:100%;height:auto;display:block}
+.nd rect{stroke-width:1}
+.nd.gray rect{fill:var(--gf);stroke:var(--gs)}.nd.gray text{fill:var(--gt)}
+.nd.purple rect{fill:var(--pf);stroke:var(--ps)}.nd.purple text{fill:var(--pt)}
+.nd.teal rect{fill:var(--tf);stroke:var(--ts)}.nd.teal text{fill:var(--tt)}
+.nd.leaf rect{fill:var(--lf);stroke:var(--ls)}.nd.leaf text{fill:var(--lt)}
+.nd.exp{cursor:pointer}
+.nd text{font-size:14px;pointer-events:none}.nd text.s{font-size:12px;opacity:.85}
+.nd .ind circle{fill:var(--bg);stroke:var(--mut)}.nd .ind text{fill:var(--fg);font-size:14px}
+.conn path{fill:none;stroke:var(--ls);stroke-width:1.2}
+@keyframes pop{from{opacity:0;transform:translateX(-8px)}to{opacity:1;transform:none}}
+@media (prefers-reduced-motion:no-preference){.nd.new{animation:pop .35s ease-out}}
+.stu{max-width:560px;margin:0 auto}
+.small{font-size:13px;color:var(--mut)}
+</style><style>
+.big{padding:14px 16px;font-size:17px}
+.qn{font-size:13px;color:var(--mut)}
+.tick{color:var(--ok)}.cross{color:var(--bad)}
+.opt.sel{border-color:var(--acc);box-shadow:inset 0 0 0 2px var(--acc);background:var(--pf)}
+.opt.dis{cursor:default}
+input[type=text]{font-size:18px}
+.sticky{position:sticky;bottom:0;background:var(--bg);padding:10px 0;border-top:1px solid var(--line);margin-top:12px}
+.hint{font-size:13px;color:var(--mut)}
+</style>
+</head>
+<body>
+<div id="app"></div>
+<script>
+var TREE={label:'神經系統',c:'gray',children:[
+{label:'中樞神經系統',sub:'CNS',c:'purple',children:[
+{label:'腦',sub:'Brain',children:[
+{label:'大腦',children:[{leaf:['額、頂、顳、枕葉']}]},
+{label:'間腦',children:[{leaf:['視丘、下視丘']}]},
+{label:'腦幹',children:[{leaf:['中腦、橋腦、延腦']}]},
+{label:'小腦',children:[{leaf:['協調肢體活動']}]}]},
+{label:'脊髓',sub:'Spinal cord',children:[
+{label:'白質',children:[{leaf:['上行徑（感覺）','下行徑（運動）']}]},
+{label:'灰質',children:[{leaf:['前角、後角、側角']}]}]}]},
+{label:'周邊神經系統',sub:'PNS',c:'teal',children:[
+{label:'腦神經',sub:'12 對',children:[
+{label:'感覺神經',children:[{leaf:['第 1、2、8 對']}]},
+{label:'運動神經',children:[{leaf:['第 3、4、6、11、12 對']}]},
+{label:'混合神經',children:[{leaf:['第 5、7、9、10 對']}]}]},
+{label:'脊神經',sub:'31 對',children:[{leaf:['頸 8、胸 12、腰 5','薦 5、尾 1']}]}]}]};
+var QS=[
+{q:'中樞神經系統包含哪兩部分？',o:['腦神經與脊神經','腦與脊髓','大腦與小腦','感覺神經與運動神經'],a:1,ex:'中樞神經系統包含腦與脊髓（書 7-3）。'},
+{q:'周邊神經系統涵蓋下列何者？',o:['腦與脊髓','視丘與下視丘','12 對腦神經與 31 對脊神經','白質與灰質'],a:2,ex:'周邊神經系統涵蓋 12 對腦神經與 31 對脊神經（書 7-3）。'},
+{q:'下列何者「不」屬於腦幹？',o:['中腦','橋腦','小腦','延腦'],a:2,ex:'腦幹包含中腦、橋腦、延腦；小腦是腦的另一個部分（書 7-3～7-5，表 7-1）。'},
+{q:'間腦包含哪兩個構造？',o:['中腦、橋腦','前角、後角','視丘、下視丘','額葉、頂葉'],a:2,ex:'間腦包含視丘與下視丘（書 7-4，表 7-1）。'},
+{q:'負責協調肢體活動、快而技巧性運動配合的是？',o:['大腦','視丘','延腦','小腦'],a:3,ex:'小腦負責協調肢體活動、快而技巧性運動配合（書 7-5，表 7-1 續）。'},
+{q:'脊髓白質中的上行徑（又稱感覺徑），傳導的是？',o:['運動訊息','感覺訊息','感覺與運動訊息皆有','兩者皆非'],a:1,ex:'白質分上行徑（感覺徑）與下行徑（運動徑）（書 7-5）。'},
+{q:'脊髓灰質可分為哪三個部分？',o:['額葉、頂葉、枕葉','中腦、橋腦、延腦','上行徑、下行徑、混合徑','前角、後角、側角'],a:3,ex:'灰質呈 H 形，分前角、後角、側角（書 7-5）。'},
+{q:'脊神經共有幾對？',o:['12','24','31','43'],a:2,ex:'脊神經共 31 對：頸 8、胸 12、腰 5、薦 5、尾 1（書 7-3、7-17）。'},
+{q:'脊神經中，胸神經有幾對？',o:['5','12','8','1'],a:1,ex:'頸 8、胸 12、腰 5、薦 5、尾 1 對（書 7-17）。'},
+{q:'第 8 對腦神經（聽神經）屬於哪一類？',o:['運動神經','感覺神經','混合神經','皆非'],a:1,ex:'感覺神經為第 1、2、8 對（書 7-18，Box 7-7）。'},
+{q:'下列哪一對腦神經屬於混合神經？',o:['第 2 對','第 3 對','第 5 對','第 11 對'],a:2,ex:'混合神經為第 5、7、9、10 對（書 7-18，Box 7-7）。'},
+{q:'屬於運動神經的腦神經是？',o:['第 1、2、8 對','第 3、4、6、11、12 對','第 5、7、9、10 對','第 3、5、7 對'],a:1,ex:'運動神經為第 3、4、6、11、12 對（書 7-18，Box 7-7）。'}];
+var XS=[16,124,262,398,520],WS=[84,112,108,96,140],PITCH=50;
+function esc(s){return String(s).replace(/[&<>"]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]})}
+function walk(n,d,c,path){n._d=d;n._id=path;n.c=n.c||c;(n.children||[]).forEach(function(k,i){walk(k,d+1,n.c,path+'.'+i)})}
+walk(TREE,0,'gray','r');
+function allNodes(n,out){out.push(n);(n.children||[]).forEach(function(k){allNodes(k,out)});return out}
+function setLevel(L){T.level=Math.max(0,Math.min(4,L));T.exp=new Set();allNodes(TREE,[]).forEach(function(n){if(n.children&&n.children.length&&n._d<T.level)T.exp.add(n._id)});renderTree()}
+function toggle(id){if(T.exp.has(id))T.exp.delete(id);else T.exp.add(id);T.level=-1;renderTree()}
+function layout(n,st){var kids=n.children||[];if(T.exp.has(n._id)&&kids.length){kids.forEach(function(k){layout(k,st);if(n._d===0)st.row+=0.3});n._y=(kids[0]._y+kids[kids.length-1]._y)/2}else{n._y=st.row;st.row+=1}}
+function treeSvg(){var st={row:0};layout(TREE,st);var conns=[],nodes=[],vis=new Set();
+function draw(n){var leaf=!!n.leaf,x=XS[n._d],w=leaf?664-x:WS[n._d],yc=30+n._y*PITCH,kids=n.children||[],open=T.exp.has(n._id)&&kids.length;vis.add(n._id);
+if(open){var nx=XS[n._d+1],xm=x+w+(nx-(x+w))/2,ys=kids.map(function(k){return 30+k._y*PITCH});
+conns.push('<path d="M'+(x+w)+' '+yc+'H'+xm+'M'+xm+' '+Math.min.apply(null,ys)+'V'+Math.max.apply(null,ys)+ys.map(function(y){return'M'+xm+' '+y+'H'+nx}).join('')+'"/>');kids.forEach(draw)}
+var cls='nd '+(leaf?'leaf':n.c)+(kids.length?' exp':'')+(T.prev.has(n._id)?'':' new'),t='';
+if(leaf){var L=n.leaf;L.forEach(function(s,i){var y=L.length===1?yc:yc+(i-(L.length-1)/2)*16;t+='<text class="s" x="'+(x+w/2)+'" y="'+y+'" text-anchor="middle" dominant-baseline="central">'+esc(s)+'</text>'})}
+else if(n.sub){t='<text x="'+(x+w/2)+'" y="'+(yc-7)+'" text-anchor="middle" dominant-baseline="central" font-weight="500">'+esc(n.label)+'</text><text class="s" x="'+(x+w/2)+'" y="'+(yc+9)+'" text-anchor="middle" dominant-baseline="central">'+esc(n.sub)+'</text>'}
+else t='<text x="'+(x+w/2)+'" y="'+yc+'" text-anchor="middle" dominant-baseline="central" font-weight="500">'+esc(n.label)+'</text>';
+var ind=kids.length?'<g class="ind"><circle cx="'+(x+w)+'" cy="'+yc+'" r="9"/><text x="'+(x+w)+'" y="'+yc+'" text-anchor="middle" dominant-baseline="central">'+(open?'−':'+')+'</text></g>':'';
+nodes.push('<g class="'+cls+'"'+(kids.length?' data-id="'+n._id+'"':'')+'><rect x="'+x+'" y="'+(yc-20)+'" width="'+w+'" height="40" rx="6"/>'+t+ind+'</g>')}
+draw(TREE);T.prev=vis;var H=Math.ceil(30+st.row*PITCH+10);
+return'<svg viewBox="0 0 680 '+H+'" role="img" aria-label="神經系統樹狀圖"><g class="conn">'+conns.join('')+'</g>'+nodes.join('')+'</svg>'}
+function renderTree(){var el=document.getElementById('treebox');if(!el)return;el.innerHTML=treeSvg();var lv=document.getElementById('lvl');if(lv)lv.textContent=T.level<0?'自訂':'第 '+T.level+' 層';
+el.querySelectorAll('.nd.exp').forEach(function(g){g.addEventListener('click',function(){toggle(g.getAttribute('data-id'))})})}
+
+/* ===== 設定（老師可改）===== */
+var CFG={
+ ACTION:'https://docs.google.com/forms/d/e/1FAIpQLSemLq_DEk8FMTlC4uzTdchEAOR0lbI51gy6Y3knMDR5qLZjNw/formResponse',
+ CODE_ENTRY:'entry.752941060',
+ Q_ENTRY:['1292166628','1087594610','2091967742','1992590326','1040362156','451874049','1705058640','1527488243','18868704','334949518','137005945','724439665'],
+ SHOW_ANSWER_AFTER_SUBMIT:true   // 設成 false：學生送出後不顯示對錯與解析，留到課堂上公布
+};
+var LET=['A','B','C','D'];
+var T={exp:new Set(),level:0,prev:new Set()};
+var S={code:'',ans:[],sent:false,sending:false,err:''};
+var app=document.getElementById('app');
+walk(TREE,0,'gray','r');
+function renderTreePage(){
+ app.innerHTML='<h1>神經系統的分類與組成</h1><div class="sub">依《身體檢查與評估》第 3 版第 7 章（7-3～7-5、7-17～7-18）整理。點節點的 ＋／－ 可個別展開；鍵盤 ← → 可換層。</div>'+
+ '<div class="bar"><button id="b0">收合到第 0 層</button><button id="bm">− 收合一層</button><button id="bp" class="pri">＋ 展開下一層</button><button id="b4">全部展開</button><span class="sub" id="lvl"></span><a href="#" style="margin-left:auto" class="sub">回首頁</a></div><div class="card" style="padding:8px"><div id="treebox"></div></div>';
+ document.getElementById('b0').onclick=function(){setLevel(0)};
+ document.getElementById('bm').onclick=function(){setLevel((T.level<0?curDepth():T.level)-1)};
+ document.getElementById('bp').onclick=function(){setLevel((T.level<0?curDepth():T.level)+1)};
+ document.getElementById('b4').onclick=function(){setLevel(4)};
+ T.prev=new Set();setLevel(T.level<0?0:T.level);
+}
+function curDepth(){var m=0;allNodes(TREE,[]).forEach(function(n){if(T.exp.has(n._id)&&n.children&&n.children.length)m=Math.max(m,n._d+1)});return m}
+document.addEventListener('keydown',function(e){if(location.hash!=='#tree')return;if(e.key==='ArrowRight'||e.key==='PageDown')setLevel((T.level<0?curDepth():T.level)+1);if(e.key==='ArrowLeft'||e.key==='PageUp')setLevel((T.level<0?curDepth():T.level)-1)});
+
+function renderHome(){
+ app.innerHTML='<h1>神經系統複習</h1><div class="sub">身體檢查與評估　第 7 章</div><div class="home"><button onclick="location.hash=\'tree\'"><b>老師／投影</b><br><span class="sub">樹狀圖，逐層展開</span></button><button onclick="location.hash=\'quiz\'"><b>學生作答</b><br><span class="sub">12 題，免登入，填代號即可</span></button></div>';
+}
+function renderQuiz(){
+ var a=S.ans,done=a.filter(function(x){return x!==undefined&&x!==null}).length;
+ var h='<h1>神經系統複習測驗</h1><div class="sub">不用登入。請填代號或學號（例如 P01），不要填真實姓名。</div>';
+ if(S.sent){
+  var ok=0;QS.forEach(function(q,i){if(a[i]===q.a)ok++});
+  h+='<div class="card"><h2>已送出，謝謝！</h2>'+(CFG.SHOW_ANSWER_AFTER_SUBMIT?'<div class="sub">代號：'+esc(S.code)+'　答對 '+ok+' / '+QS.length+' 題</div>':'<div class="sub">代號：'+esc(S.code)+'。答案會在課堂上公布。</div>')+'</div>';
+  if(CFG.SHOW_ANSWER_AFTER_SUBMIT){QS.forEach(function(q,i){var good=a[i]===q.a;h+='<div class="card"><div class="qn">第 '+(i+1)+' 題 <span class="'+(good?'tick':'cross')+'">'+(good?'✓ 答對':'✗ 答錯')+'</span></div><div class="q" style="font-size:18px">'+esc(q.q)+'</div><div class="sub">你的答案：'+(a[i]===undefined?'未答':LET[a[i]]+'. '+esc(q.o[a[i]]))+'</div><div class="sub">正確答案：'+LET[q.a]+'. '+esc(q.o[q.a])+'</div><div class="ex">'+esc(q.ex)+'</div></div>'})}
+  h+='<div class="bar"><a href="#" class="sub">回首頁</a></div>';app.innerHTML=h;return;
+ }
+ h+='<div class="card"><label for="code"><b>代號或學號</b></label><br><input type="text" id="code" autocomplete="off" maxlength="30" value="'+esc(S.code)+'" placeholder="例如 P01"></div>';
+ QS.forEach(function(q,i){h+='<div class="card"><div class="qn">第 '+(i+1)+' / '+QS.length+' 題</div><div class="q" style="font-size:19px">'+esc(q.q)+'</div>'+q.o.map(function(t,j){return'<button class="opt big'+(a[i]===j?' sel':'')+'" data-q="'+i+'" data-o="'+j+'"><span class="txt"><span>'+LET[j]+'. '+esc(t)+'</span></span></button>'}).join('')+'</div>'});
+ h+='<div class="sticky"><div class="hint">已作答 '+done+' / '+QS.length+(S.err?'　<span class="cross">'+esc(S.err)+'</span>':'')+'</div><button class="pri big" id="sub"'+(S.sending?' disabled':'')+'>'+(S.sending?'送出中…':'送出答案')+'</button></div>';
+ var y=window.scrollY;app.innerHTML=h;window.scrollTo(0,y);
+ app.querySelectorAll('.opt').forEach(function(b){b.onclick=function(){S.code=document.getElementById('code').value;S.ans[+b.dataset.q]=+b.dataset.o;S.err='';renderQuiz()}});
+ document.getElementById('code').oninput=function(e){S.code=e.target.value};
+ document.getElementById('sub').onclick=submit;
+}
+function submit(){
+ S.code=document.getElementById('code').value.trim();
+ if(!S.code){S.err='請先填代號或學號';renderQuiz();return}
+ var miss=[];QS.forEach(function(q,i){if(S.ans[i]===undefined||S.ans[i]===null)miss.push(i+1)});
+ if(miss.length){S.err='還有題目沒答：第 '+miss.join('、')+' 題';renderQuiz();return}
+ S.sending=true;S.err='';renderQuiz();
+ var p=new URLSearchParams();p.append(CFG.CODE_ENTRY,S.code);
+ QS.forEach(function(q,i){p.append('entry.'+CFG.Q_ENTRY[i],q.o[S.ans[i]])});
+ p.append('fvv','1');p.append('pageHistory','0');
+ fetch(CFG.ACTION,{method:'POST',mode:'no-cors',body:p}).then(function(){S.sending=false;S.sent=true;window.scrollTo(0,0);renderQuiz()}).catch(function(){S.sending=false;S.err='送出失敗，請確認網路後再按一次';renderQuiz()});
+}
+function route(){var h=location.hash.replace('#','');if(h==='tree')renderTreePage();else if(h==='quiz')renderQuiz();else renderHome()}
+window.addEventListener('hashchange',route);route();
+</script>
+</body>
+</html>
