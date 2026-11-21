@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Glasgow Coma Scale 計分練習</title>
+<style>
+:root{--red:#9c7e7a;--gray:#4a4744;--light:#efe9e4;--line:#d8cfc7}
+*{box-sizing:border-box}
+body{margin:0;font-family:Arial,"Noto Sans TC","Microsoft JhengHei",sans-serif;color:var(--gray);background:#faf7f4;line-height:1.6}
+header{padding:20px 16px 8px;text-align:center}
+h1{margin:0;font-size:28px}
+.sub{color:#777;font-size:14px}
+main{max-width:860px;margin:0 auto;padding:8px 16px 48px}
+.tabs{display:flex;gap:8px;justify-content:center;margin:12px 0}
+.tabs button{border:2px solid var(--red);background:#faf7f4;color:#7a5f5b;padding:8px 18px;border-radius:8px;font-size:16px;cursor:pointer}
+.tabs button.on{background:var(--red);color:#fff}
+.card{border:1px solid var(--line);border-radius:12px;padding:16px;margin:14px 0}
+.card h2{margin:0 0 6px;font-size:20px}
+.card h2 span{color:var(--red)}
+.case{font-size:18px}
+.row{display:flex;gap:10px;flex-wrap:wrap;margin-top:10px}
+.col{flex:1;min-width:150px}
+label{font-weight:bold;font-size:14px;color:var(--red)}
+select,input[type=text]{width:100%;padding:8px;border:1px solid var(--line);border-radius:8px;font-size:16px}
+.btn{background:var(--red);color:#fff;border:0;border-radius:8px;padding:9px 18px;font-size:16px;cursor:pointer;margin-top:10px}
+.btn.alt{background:#faf7f4;color:#7a5f5b;border:2px solid var(--red)}
+.ans{margin-top:10px;padding:10px;border-radius:8px;background:var(--light);display:none}
+.ans.show{display:block}
+.ok{color:#7d8f7a;font-weight:bold}.bad{color:#a8686a;font-weight:bold}
+table{border-collapse:collapse;width:100%;margin-top:8px;font-size:15px}
+th,td{border:1px solid var(--line);padding:6px 8px;text-align:center}
+th{background:var(--red);color:#fff}
+td:first-child{background:var(--light);font-weight:bold}
+.hide{display:none}
+.note{font-size:13px;color:#777}
+.big .case{font-size:26px}.big .card h2{font-size:28px}.big .ans{font-size:22px}
+</style>
+</head>
+<body>
+<header>
+<h1>Glasgow Coma Scale（計分練習）</h1>
+<div class="sub">先說 E，再說 V，再說 M；每項取「最佳」反應</div>
+</header>
+<main>
+<div class="tabs">
+<button id="tabS" class="on">學生作答</button>
+<button id="tabT">老師／投影</button>
+<button id="tabR">計分對照表</button>
+</div>
+
+<section id="viewS"></section>
+
+<section id="viewT" class="hide big">
+<div class="note" id="syncNote"></div>
+<div id="tList"></div>
+<button class="btn alt" id="nextBtn">顯示下一題答案</button>
+<button class="btn alt" id="resetBtn">全部隱藏</button>
+</section>
+
+<section id="viewR" class="hide">
+<table>
+<tr><th>分數</th><th>睜眼 E（1–4）</th><th>語言 V（1–5）</th><th>運動 M（1–6）</th></tr>
+<tr><td>6</td><td>—</td><td>—</td><td>依指令動作</td></tr>
+<tr><td>5</td><td>—</td><td>對答切題</td><td>對疼痛能定位</td></tr>
+<tr><td>4</td><td>自動睜眼</td><td>對話混亂</td><td>對疼痛退縮</td></tr>
+<tr><td>3</td><td>呼喚時睜眼</td><td>只說單字</td><td>異常屈曲（去皮質）</td></tr>
+<tr><td>2</td><td>疼痛時睜眼</td><td>無意義聲音</td><td>異常伸直（去大腦）</td></tr>
+<tr><td>1</td><td>不睜眼</td><td>無聲音</td><td>無反應</td></tr>
+</table>
+<h3 style="margin:18px 0 0">總分分級（頭部外傷）</h3>
+<table>
+<tr><th>程度</th><th>GCS 總分</th><th>備註</th></tr>
+<tr><td>輕度</td><td>13–15</td><td></td></tr>
+<tr><td>中度</td><td>9–12</td><td></td></tr>
+<tr><td>重度</td><td>3–8（≤ 8）</td><td>通常視為昏迷</td></tr>
+</table>
+<p class="note">此分級原用於頭部外傷。無法評估要註記：插管記 VT、眼睛腫脹記 EC、失語症記 VA，不要硬代 1 分。
+出處：Teasdale &amp; Jennett, Lancet 1974;304:81-84；Teasdale G, et al. Lancet Neurol 2014;13:844-854。</p>
+</section>
+</main>
+
+<script>
+// ===== 設定 =====
+// 想讓老師按「顯示答案」後學生手機同步，需自備後端（例如 Google Apps Script 網頁應用程式）。
+// GET 回傳 {"reveal":數字}；POST 傳 {"reveal":數字} 設定。留空則只在本機運作。
+var SYNC_URL = "";
+// 學生按「送出作答」時，作答會傳到這個網址（Google Apps Script 網頁應用程式）。留空則不送出。
+var SUBMIT_URL = "https://script.google.com/macros/s/AKfycbyJ438kyE56J9LT7kghXlw766TRY_3XLrKhc3RvKaushBzYetWZU6mirIce5OULz7Ir/exec";
+
+var CASES = [
+ {t:"題 1", d:"37 歲 A 男騎機車與汽車擦撞。EMT 到場時，呼喚其名字即睜眼，並可依指令舉手；能說出住址，但答錯今天日期，也想不起為何躺在地上。請問 GCS 為何？", e:3, v:4, m:6, why:"呼喚睜眼 E3；答錯日期、定向混亂 V4；依指令舉手 M6。"},
+ {t:"題 2", d:"62 歲 B 女在家突然喊頭痛後倒地。EMT 到場時，呼喚無反應，壓眶才睜眼；只發出呻吟聲，雙手向內彎曲貼在胸前。請問 GCS 為何？", e:2, v:2, m:3, why:"疼痛睜眼 E2；無意義聲音 V2；上肢內屈（去皮質）M3。"},
+ {t:"題 3（備用）", d:"55 歲 C 男從鷹架墜落，到院時已插管。呼喚與壓眶皆不睜眼；無法發聲；壓眶時手會伸到臉前撥開護理師的手。請問 GCS 為何？", e:1, v:"T", m:5, why:"不睜眼 E1；插管無法發聲記 VT，不以 V1 代入；手撥開＝定位 M5。總分不硬算。"}
+];
+function tot(c){return c.v==="T"?"E"+c.e+" VT M"+c.m+"（V 無法評估，不計總分）":"E"+c.e+" V"+c.v+" M"+c.m+" ＝ "+(c.e+c.v+c.m)+" 分";}
+function opt(n,extra){var s='<option value="">選擇</option>';for(var i=1;i<=n;i++)s+='<option value="'+i+'">'+i+'</option>';return s+(extra||"");}
+
+// ===== 學生 =====
+var vs=document.getElementById("viewS");
+var html='<div class="card"><label>姓名</label><input type="text" id="code" placeholder="請填姓名"></div>';
+CASES.forEach(function(c,i){
+ html+='<div class="card"><h2><span>'+c.t+'</span></h2><div class="case">'+c.d+'</div>'+
+ '<div class="row"><div class="col"><label>E 睜眼</label><select id="e'+i+'">'+opt(4,'<option value="C">C（眼腫無法評估）</option>')+'</select></div>'+
+ '<div class="col"><label>V 語言</label><select id="v'+i+'">'+opt(5,'<option value="T">T（插管）</option><option value="A">A（失語）</option>')+'</select></div>'+
+ '<div class="col"><label>M 運動</label><select id="m'+i+'">'+opt(6)+'</select></div></div>'+
+ '<button class="btn" data-i="'+i+'">核對</button><div class="ans" id="a'+i+'"></div></div>';
+});
+html+='<div class="card"><button class="btn" id="subBtn">送出作答</button> <button class="btn alt" id="copyBtn">複製我的作答</button> <span class="note" id="copyMsg"></span></div>';
+vs.innerHTML=html;
+vs.addEventListener("click",function(ev){
+ var b=ev.target.closest("button[data-i]");if(!b)return;
+ var i=+b.getAttribute("data-i"),c=CASES[i];
+ var e=document.getElementById("e"+i).value,v=document.getElementById("v"+i).value,m=document.getElementById("m"+i).value;
+ var box=document.getElementById("a"+i);
+ if(!e||!v||!m){box.className="ans show";box.innerHTML='<span class="bad">三項都要選。</span>';return;}
+ var ok=(e==c.e)&&(v==String(c.v))&&(m==c.m);
+ var mine="E"+e+" V"+v+" M"+m;
+ box.className="ans show";
+ box.innerHTML=(ok?'<span class="ok">答對</span>':'<span class="bad">再想想</span>')+'　你的答案：'+mine+'<br>參考答案：'+tot(c)+'<br>'+c.why;
+});
+document.getElementById("copyBtn").onclick=function(){
+ var code=document.getElementById("code").value.trim()||"(未填姓名)";
+ var out=code+"｜"+CASES.map(function(c,i){return "題"+(i+1)+" E"+document.getElementById("e"+i).value+" V"+document.getElementById("v"+i).value+" M"+document.getElementById("m"+i).value;}).join("｜");
+ var msg=document.getElementById("copyMsg");
+ if(navigator.clipboard){navigator.clipboard.writeText(out).then(function(){msg.textContent="已複製";},function(){msg.textContent=out;});}
+ else{msg.textContent=out;}
+};
+
+
+document.getElementById("subBtn").onclick=function(){
+ var msg=document.getElementById("copyMsg");
+ var name=document.getElementById("code").value.trim();
+ if(!name){msg.textContent="請先填姓名";return;}
+ if(!SUBMIT_URL){msg.textContent="老師尚未設定送出網址";return;}
+ var head=["時間","姓名"],row=[new Date().toLocaleString("zh-TW"),name];
+ CASES.forEach(function(c,i){
+  var e=document.getElementById("e"+i).value,v=document.getElementById("v"+i).value,m=document.getElementById("m"+i).value;
+  var ok=(e==c.e)&&(v==String(c.v))&&(m==c.m);
+  head.push("題"+(i+1)+" E","題"+(i+1)+" V","題"+(i+1)+" M","題"+(i+1)+" 對錯");
+  row.push(e,v,m,(e&&v&&m)?(ok?"對":"錯"):"未答");
+ });
+ msg.textContent="送出中…";
+ fetch(SUBMIT_URL,{method:"POST",mode:"no-cors",headers:{"Content-Type":"text/plain"},body:JSON.stringify({sheet:"GCS計分練習",header:head,row:row})})
+ .then(function(){msg.textContent="已送出";},function(){msg.textContent="送出失敗，請改按「複製我的作答」";});
+};
+
+// ===== 老師 =====
+var reveal=0;
+function renderT(){
+ var h="";
+ CASES.forEach(function(c,i){
+  h+='<div class="card"><h2><span>'+c.t+'</span></h2><div class="case">'+c.d+'</div>'+
+  '<div class="ans '+(i<reveal?"show":"")+'">'+tot(c)+'<br>'+c.why+'</div></div>';
+ });
+ document.getElementById("tList").innerHTML=h;
+}
+function setReveal(n){
+ reveal=Math.max(0,Math.min(CASES.length,n));renderT();
+ if(SYNC_URL){try{fetch(SYNC_URL,{method:"POST",headers:{"Content-Type":"text/plain"},body:JSON.stringify({reveal:reveal})});}catch(e){}}
+}
+document.getElementById("nextBtn").onclick=function(){setReveal(reveal+1);};
+document.getElementById("resetBtn").onclick=function(){setReveal(0);};
+document.getElementById("syncNote").textContent=SYNC_URL?"已設定同步網址":"未設定 SYNC_URL：答案只在這個畫面顯示，不會同步到學生手機。";
+renderT();
+
+// ===== 分頁 =====
+var tabs={tabS:"viewS",tabT:"viewT",tabR:"viewR"};
+Object.keys(tabs).forEach(function(k){
+ document.getElementById(k).onclick=function(){
+  Object.keys(tabs).forEach(function(j){
+   document.getElementById(j).className=(j===k)?"on":"";
+   document.getElementById(tabs[j]).className=(j===k)?(j==="tabT"?"big":""):"hide"+(j==="tabT"?" big":"");
+  });
+ };
+});
+if(location.hash==="#teacher"){document.getElementById("tabT").click();}
+</script>
+</body>
+</html>
