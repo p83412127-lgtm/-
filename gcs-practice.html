@@ -32,6 +32,11 @@ table{border-collapse:collapse;width:100%;margin-top:8px;font-size:15px}
 th,td{border:1px solid var(--line);padding:6px 8px;text-align:center}
 th{background:var(--red);color:#fff}
 td:first-child{background:var(--light);font-weight:bold}
+.pies{display:flex;gap:14px;flex-wrap:wrap;margin-top:8px}
+.pie{flex:1;min-width:200px;text-align:center}
+.pie h4{margin:4px 0;color:var(--red)}
+.lg{font-size:15px;text-align:left;display:inline-block}
+.lg i{display:inline-block;width:12px;height:12px;border-radius:3px;margin-right:6px}
 .hide{display:none}
 .note{font-size:13px;color:#777}
 .big .case{font-size:26px}.big .card h2{font-size:28px}.big .ans{font-size:22px}
@@ -53,6 +58,9 @@ td:first-child{background:var(--light);font-weight:bold}
 
 <section id="viewT" class="hide big">
 <div class="note" id="syncNote"></div>
+<div class="card"><h2><span>填答統計</span></h2>
+<button class="btn" id="statBtn">更新填答統計</button> <span class="note" id="statMsg"></span>
+<div id="stats"></div></div>
 <div id="tList"></div>
 <button class="btn alt" id="nextBtn">顯示下一題答案</button>
 <button class="btn alt" id="resetBtn">全部隱藏</button>
@@ -143,6 +151,51 @@ document.getElementById("subBtn").onclick=function(){
  msg.textContent="送出中…";
  fetch(SUBMIT_URL,{method:"POST",mode:"no-cors",headers:{"Content-Type":"text/plain"},body:JSON.stringify({sheet:"GCS計分練習",header:head,row:row})})
  .then(function(){msg.textContent="已送出";},function(){msg.textContent="送出失敗，請改按「複製我的作答」";});
+};
+
+
+var COLORS=["#9c7e7a","#8f9e8b","#b8a58c","#8a9aa8","#b79ab0","#c4b6a6","#7c8c86"];
+function pieSvg(counts,keys){
+ var tot=0;keys.forEach(function(k){tot+=counts[k]||0;});
+ if(!tot)return '<svg width="150" height="150"><circle cx="75" cy="75" r="60" fill="#e8e2dc"/></svg>';
+ var a=-Math.PI/2,out='<svg width="150" height="150" viewBox="0 0 150 150">';
+ var used=keys.filter(function(k){return (counts[k]||0)>0;});
+ used.forEach(function(k){
+  var n=counts[k],col=COLORS[keys.indexOf(k)%COLORS.length];
+  if(used.length===1){out+='<circle cx="75" cy="75" r="60" fill="'+col+'"/>';return;}
+  var b=a+n/tot*2*Math.PI,x1=75+60*Math.cos(a),y1=75+60*Math.sin(a),x2=75+60*Math.cos(b),y2=75+60*Math.sin(b);
+  out+='<path d="M75 75 L'+x1+' '+y1+' A60 60 0 '+(b-a>Math.PI?1:0)+' 1 '+x2+' '+y2+' Z" fill="'+col+'" stroke="#faf7f4" stroke-width="2"/>';
+  a=b;
+ });
+ return out+'</svg>';
+}
+function renderStats(d){
+ var by={};(d.cols||[]).forEach(function(c){by[c.h]=c.counts;});
+ var h='<p><b>已作答人數：'+d.n+'</b>（不顯示姓名）</p>';
+ CASES.forEach(function(c,i){
+  var q="題"+(i+1),ok=by[q+" 對錯"]||{};
+  h+='<h3 style="margin:14px 0 0">'+c.t+'　全對 '+(ok["對"]||0)+' 人 ／ 有錯 '+(ok["錯"]||0)+' 人</h3><div class="pies">';
+  [["E",[1,2,3,4,"C"],c.e],["V",[1,2,3,4,5,"T","A"],c.v],["M",[1,2,3,4,5,6],c.m]].forEach(function(p){
+   var counts=by[q+" "+p[0]]||{},keys=p[1].map(String);
+   Object.keys(counts).forEach(function(k){if(keys.indexOf(k)<0)keys.push(k);});
+   h+='<div class="pie"><h4>'+p[0]+'</h4>'+pieSvg(counts,keys)+'<br><div class="lg">';
+   keys.forEach(function(k,j){
+    var n=counts[k]||0;if(!n&&k!==String(p[2]))return;
+    h+='<div><i style="background:'+COLORS[j%COLORS.length]+'"></i>'+p[0]+k+'：'+n+' 人'+(k===String(p[2])?' ✓':'')+'</div>';
+   });
+   h+='</div></div>';
+  });
+  h+='</div>';
+ });
+ document.getElementById("stats").innerHTML=h;
+}
+document.getElementById("statBtn").onclick=function(){
+ var msg=document.getElementById("statMsg");
+ if(!SUBMIT_URL){msg.textContent="尚未設定 SUBMIT_URL";return;}
+ msg.textContent="讀取中…";
+ fetch(SUBMIT_URL+"?sheet="+encodeURIComponent("GCS計分練習")).then(function(r){return r.json();}).then(function(d){
+  renderStats(d);msg.textContent="已更新 "+new Date().toLocaleTimeString("zh-TW");
+ }).catch(function(){msg.textContent="讀取失敗，請確認 Apps Script 已更新並重新部署";});
 };
 
 // ===== 老師 =====
