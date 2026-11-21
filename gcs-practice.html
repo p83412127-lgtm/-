@@ -43,7 +43,7 @@ td:first-child{background:var(--light);font-weight:bold}
 <div class="sub">先說 E，再說 V，再說 M；每項取「最佳」反應</div>
 </header>
 <main>
-<div class="tabs">
+<div class="tabs hide" id="tabsBar">
 <button id="tabS" class="on">學生作答</button>
 <button id="tabT">老師／投影</button>
 <button id="tabR">計分對照表</button>
@@ -174,7 +174,18 @@ Object.keys(tabs).forEach(function(k){
   });
  };
 });
-if(location.hash==="#teacher"){document.getElementById("tabT").click();}
+function applyMode(){
+ var teacher=(location.hash==="#teacher");
+ document.getElementById("tabsBar").className=teacher?"tabs":"tabs hide";
+ if(teacher){document.getElementById("tabT").click();}
+ else{
+  document.getElementById("viewS").className="";
+  document.getElementById("viewT").className="hide big";
+  document.getElementById("viewR").className="hide";
+ }
+}
+window.addEventListener("hashchange",applyMode);
+applyMode();
 </script>
 </body>
 </html>
