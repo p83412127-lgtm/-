@@ -99,7 +99,7 @@ var SUBMIT_URL = "https://script.google.com/macros/s/AKfycbyJ438kyE56J9LT7kghXlw
 var CASES = [
  {t:"題 1", d:"37 歲 A 男騎機車與汽車擦撞。EMT 到場時，呼喚其名字即睜眼，並可依指令舉手；能說出住址，但答錯今天日期，也想不起為何躺在地上。請問 GCS 為何？", e:3, v:4, m:6, why:"呼喚睜眼 E3；答錯日期、定向混亂 V4；依指令舉手 M6。"},
  {t:"題 2", d:"62 歲 B 女在家突然喊頭痛後倒地。EMT 到場時，呼喚無反應，壓指甲床才睜眼；只發出呻吟聲，雙手向內彎曲貼在胸前。請問 GCS 為何？", e:2, v:2, m:3, why:"疼痛睜眼 E2；無意義聲音 V2；上肢內屈（去皮質）M3。"},
- {t:"題 3（備用）", d:"55 歲 C 男從鷹架墜落，到院時已插管。呼喚與壓眶皆不睜眼；無法發聲；壓眶時手會伸到臉前撥開護理師的手。請問 GCS 為何？", e:1, v:"T", m:5, why:"不睜眼 E1；插管無法發聲記 VT，不以 V1 代入；手撥開＝定位 M5。總分不硬算。"}
+ {t:"題 3", d:"55 歲 C 男從鷹架墜落，到院時已插管。呼喚與壓眶皆不睜眼；無法發聲；壓眶時手會伸到臉前撥開護理師的手。請問 GCS 為何？", e:1, v:"T", m:5, why:"不睜眼 E1；插管無法發聲記 VT，不以 V1 代入；手撥開＝定位 M5。總分不硬算。"}
 ];
 function tot(c){return c.v==="T"?"E"+c.e+" VT M"+c.m+"（V 無法評估，不計總分）":"E"+c.e+" V"+c.v+" M"+c.m+" ＝ "+(c.e+c.v+c.m)+" 分";}
 function opt(n,extra){var s='<option value="">選擇</option>';for(var i=1;i<=n;i++)s+='<option value="'+i+'">'+i+'</option>';return s+(extra||"");}
@@ -139,15 +139,10 @@ document.getElementById("copyBtn").onclick=function(){
 
 function revealAll(){
  CASES.forEach(function(c,i){
-  var e=document.getElementById("e"+i).value,v=document.getElementById("v"+i).value,m=document.getElementById("m"+i).value;
-  var box=document.getElementById("a"+i);
-  var ok=(e==c.e)&&(v==String(c.v))&&(m==c.m);
-  var mine=(e&&v&&m)?"E"+e+" V"+v+" M"+m:"未完整作答";
-  box.className="ans show";
-  box.innerHTML=((e&&v&&m)?(ok?'<span class="ok">答對</span>':'<span class="bad">再想想</span>'):'<span class="bad">未作答</span>')+'　你的答案：'+mine+'<br>參考答案：'+tot(c)+'<br>'+c.why;
   ["e","v","m"].forEach(function(p){document.getElementById(p+i).disabled=true;});
  });
  document.getElementById("subBtn").disabled=true;
+ document.getElementById("copyMsg").textContent="已送出，謝謝！答案由老師在課堂上公布。";
 }
 document.getElementById("subBtn").onclick=function(){
  var msg=document.getElementById("copyMsg");
