@@ -60,7 +60,7 @@ td:first-child{background:var(--light);font-weight:bold}
 <div class="note" id="syncNote"></div>
 <div class="card"><h2><span>填答統計</span></h2>
 <button class="btn" id="statBtn">更新填答統計</button> <span class="note" id="statMsg"></span>
-<div id="stats"></div></div>
+<div id="stats"><p class="note">按上方按鈕載入。</p></div></div>
 <div id="tList"></div>
 <button class="btn alt" id="nextBtn">顯示下一題答案</button>
 <button class="btn alt" id="resetBtn">全部隱藏</button>
@@ -98,7 +98,7 @@ var SUBMIT_URL = "https://script.google.com/macros/s/AKfycbyJ438kyE56J9LT7kghXlw
 
 var CASES = [
  {t:"題 1", d:"37 歲 A 男騎機車與汽車擦撞。EMT 到場時，呼喚其名字即睜眼，並可依指令舉手；能說出住址，但答錯今天日期，也想不起為何躺在地上。請問 GCS 為何？", e:3, v:4, m:6, why:"呼喚睜眼 E3；答錯日期、定向混亂 V4；依指令舉手 M6。"},
- {t:"題 2", d:"62 歲 B 女在家突然喊頭痛後倒地。EMT 到場時，呼喚無反應，壓眶才睜眼；只發出呻吟聲，雙手向內彎曲貼在胸前。請問 GCS 為何？", e:2, v:2, m:3, why:"疼痛睜眼 E2；無意義聲音 V2；上肢內屈（去皮質）M3。"},
+ {t:"題 2", d:"62 歲 B 女在家突然喊頭痛後倒地。EMT 到場時，呼喚無反應，壓指甲床才睜眼；只發出呻吟聲，雙手向內彎曲貼在胸前。請問 GCS 為何？", e:2, v:2, m:3, why:"疼痛睜眼 E2；無意義聲音 V2；上肢內屈（去皮質）M3。"},
  {t:"題 3（備用）", d:"55 歲 C 男從鷹架墜落，到院時已插管。呼喚與壓眶皆不睜眼；無法發聲；壓眶時手會伸到臉前撥開護理師的手。請問 GCS 為何？", e:1, v:"T", m:5, why:"不睜眼 E1；插管無法發聲記 VT，不以 V1 代入；手撥開＝定位 M5。總分不硬算。"}
 ];
 function tot(c){return c.v==="T"?"E"+c.e+" VT M"+c.m+"（V 無法評估，不計總分）":"E"+c.e+" V"+c.v+" M"+c.m+" ＝ "+(c.e+c.v+c.m)+" 分";}
@@ -109,10 +109,10 @@ var vs=document.getElementById("viewS");
 var html='<div class="card"><label>姓名</label><input type="text" id="code" placeholder="請填姓名"></div>';
 CASES.forEach(function(c,i){
  html+='<div class="card"><h2><span>'+c.t+'</span></h2><div class="case">'+c.d+'</div>'+
- '<div class="row"><div class="col"><label>E 睜眼</label><select id="e'+i+'">'+opt(4,'<option value="C">C（眼腫無法評估）</option>')+'</select></div>'+
- '<div class="col"><label>V 語言</label><select id="v'+i+'">'+opt(5,'<option value="T">T（插管）</option><option value="A">A（失語）</option>')+'</select></div>'+
+ '<div class="row"><div class="col"><label>E 睜眼</label><select id="e'+i+'">'+opt(4,'<option value="C">C</option>')+'</select></div>'+
+ '<div class="col"><label>V 語言</label><select id="v'+i+'">'+opt(5,'<option value="T">T</option><option value="A">A</option>')+'</select></div>'+
  '<div class="col"><label>M 運動</label><select id="m'+i+'">'+opt(6)+'</select></div></div>'+
- '<button class="btn" data-i="'+i+'">核對</button><div class="ans" id="a'+i+'"></div></div>';
+ '<div class="ans" id="a'+i+'"></div></div>';
 });
 html+='<div class="card"><button class="btn" id="subBtn">送出作答</button> <button class="btn alt" id="copyBtn">複製我的作答</button> <span class="note" id="copyMsg"></span></div>';
 vs.innerHTML=html;
@@ -136,6 +136,19 @@ document.getElementById("copyBtn").onclick=function(){
 };
 
 
+
+function revealAll(){
+ CASES.forEach(function(c,i){
+  var e=document.getElementById("e"+i).value,v=document.getElementById("v"+i).value,m=document.getElementById("m"+i).value;
+  var box=document.getElementById("a"+i);
+  var ok=(e==c.e)&&(v==String(c.v))&&(m==c.m);
+  var mine=(e&&v&&m)?"E"+e+" V"+v+" M"+m:"未完整作答";
+  box.className="ans show";
+  box.innerHTML=((e&&v&&m)?(ok?'<span class="ok">答對</span>':'<span class="bad">再想想</span>'):'<span class="bad">未作答</span>')+'　你的答案：'+mine+'<br>參考答案：'+tot(c)+'<br>'+c.why;
+  ["e","v","m"].forEach(function(p){document.getElementById(p+i).disabled=true;});
+ });
+ document.getElementById("subBtn").disabled=true;
+}
 document.getElementById("subBtn").onclick=function(){
  var msg=document.getElementById("copyMsg");
  var name=document.getElementById("code").value.trim();
@@ -150,7 +163,7 @@ document.getElementById("subBtn").onclick=function(){
  });
  msg.textContent="送出中…";
  fetch(SUBMIT_URL,{method:"POST",mode:"no-cors",headers:{"Content-Type":"text/plain"},body:JSON.stringify({sheet:"GCS計分練習",header:head,row:row})})
- .then(function(){msg.textContent="已送出";},function(){msg.textContent="送出失敗，請改按「複製我的作答」";});
+ .then(function(){msg.textContent="已送出";revealAll();},function(){msg.textContent="送出失敗，請改按「複製我的作答」";});
 };
 
 
@@ -193,9 +206,12 @@ document.getElementById("statBtn").onclick=function(){
  var msg=document.getElementById("statMsg");
  if(!SUBMIT_URL){msg.textContent="尚未設定 SUBMIT_URL";return;}
  msg.textContent="讀取中…";
- fetch(SUBMIT_URL+"?sheet="+encodeURIComponent("GCS計分練習")).then(function(r){return r.json();}).then(function(d){
-  renderStats(d);msg.textContent="已更新 "+new Date().toLocaleTimeString("zh-TW");
- }).catch(function(){msg.textContent="讀取失敗，請確認 Apps Script 已更新並重新部署";});
+ fetch(SUBMIT_URL+"?sheet="+encodeURIComponent("GCS計分練習")).then(function(r){
+  return r.text().then(function(t){
+   var d;try{d=JSON.parse(t);}catch(e){msg.textContent="讀取失敗：回應不是統計資料（"+r.status+"）："+t.replace(/<[^>]*>/g," ").replace(/\s+/g," ").slice(0,80);return;}
+   renderStats(d);msg.textContent="已更新 "+new Date().toLocaleTimeString("zh-TW");
+  });
+ }).catch(function(e){msg.textContent="讀取失敗：網路或權限被擋（"+(e&&e.message?e.message:e)+"）";});
 };
 
 // ===== 老師 =====
@@ -230,7 +246,7 @@ Object.keys(tabs).forEach(function(k){
 function applyMode(){
  var teacher=(location.hash==="#teacher");
  document.getElementById("tabsBar").className=teacher?"tabs":"tabs hide";
- if(teacher){document.getElementById("tabT").click();}
+ if(teacher){document.getElementById("tabT").click();document.getElementById("statBtn").click();}
  else{
   document.getElementById("viewS").className="";
   document.getElementById("viewT").className="hide big";
