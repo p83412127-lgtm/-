@@ -1,0 +1,415 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Warm up：神經系統</title>
+<style>
+:root{--acc:#9c7e7a;--gray:#4a4744;--light:#efe9e4;--line:#d8cfc7}
+*{box-sizing:border-box}
+body{margin:0;font-family:Arial,"Noto Sans TC","Microsoft JhengHei",sans-serif;color:var(--gray);background:#faf7f4;line-height:1.6}
+header{padding:20px 16px 8px;text-align:center}
+h1{margin:0;font-size:28px}
+.sub{color:#777;font-size:14px}
+main{max-width:900px;margin:0 auto;padding:8px 16px 48px}
+.tabs{display:flex;gap:8px;justify-content:center;margin:12px 0;flex-wrap:wrap}
+.tabs button{border:2px solid var(--acc);background:#faf7f4;color:#7a5f5b;padding:8px 18px;border-radius:8px;font-size:16px;cursor:pointer}
+.tabs button.on{background:var(--acc);color:#fff}
+.card{border:1px solid var(--line);border-radius:12px;padding:16px;margin:14px 0;background:#fff}
+.card h2{margin:0 0 6px;font-size:20px}
+.card h2 span{color:var(--acc)}
+.case{font-size:18px}
+label{font-weight:bold;font-size:14px;color:var(--acc)}
+input[type=text]{width:100%;padding:8px;border:1px solid var(--line);border-radius:8px;font-size:16px}
+.opt{display:block;width:100%;text-align:left;margin:8px 0;padding:11px 14px;font-size:17px;border:1px solid var(--line);border-radius:8px;background:#faf7f4;color:var(--gray);cursor:pointer}
+.opt.sel{border-color:var(--acc);background:var(--light);box-shadow:inset 0 0 0 1px var(--acc)}
+.opt[disabled]{cursor:default;opacity:.85}
+.btn{background:var(--acc);color:#fff;border:0;border-radius:8px;padding:9px 18px;font-size:16px;cursor:pointer;margin-top:10px}
+.btn.alt{background:#faf7f4;color:#7a5f5b;border:2px solid var(--acc)}
+.btn[disabled]{opacity:.6;cursor:default}
+.ans{margin-top:10px;padding:10px;border-radius:8px;background:var(--light);display:none}
+.ans.show{display:block}
+.ok{color:#7d8f7a;font-weight:bold}.bad{color:#a8686a;font-weight:bold}
+table{border-collapse:collapse;width:100%;margin-top:8px;font-size:15px}
+th,td{border:1px solid var(--line);padding:6px 8px;text-align:center}
+th{background:var(--acc);color:#fff}
+td:first-child{background:var(--light);font-weight:bold}
+.pies{display:flex;gap:14px;flex-wrap:wrap;margin-top:8px}
+.pie{flex:1;min-width:220px;text-align:center}
+.lg{font-size:15px;text-align:left;display:inline-block}
+.lg i{display:inline-block;width:12px;height:12px;border-radius:3px;margin-right:6px;vertical-align:middle}
+.hide{display:none}
+.note{font-size:13px;color:#777}
+.big .case{font-size:24px}.big .card h2{font-size:26px}.big .ans{font-size:21px}
+svg{width:100%;height:auto;display:block}
+.nd rect{stroke-width:1.2}
+.nd.root rect{fill:#efe9e4;stroke:#a9a097}.nd.root text{fill:#4a4744}
+.nd.cns rect{fill:#f1e5e3;stroke:#9c7e7a}.nd.cns text{fill:#6f534f}
+.nd.pns rect{fill:#e5ece5;stroke:#8f9e8b}.nd.pns text{fill:#53604f}
+.nd.leaf rect{fill:#fff;stroke:#d8cfc7}.nd.leaf text{fill:#4a4744}
+.nd.exp{cursor:pointer}
+.nd text{font-size:14px;pointer-events:none}
+.nd text.s{font-size:12px;opacity:.85}
+.nd .ind circle{fill:#faf7f4;stroke:#8d8781}
+.nd .ind text{fill:#4a4744;font-size:14px}
+.conn path{fill:none;stroke:#c3b9b0;stroke-width:1.2}
+</style>
+</head>
+<body>
+<header>
+<h1>Warm up：神經系統</h1>
+<div class="sub">開場暖身 3 題，答案由老師在課堂上公布</div>
+</header>
+<main>
+<div class="tabs hide" id="tabsBar">
+<button id="tabS" class="on">學生作答</button>
+<button id="tabT">老師／投影</button>
+<button id="tabD">樹狀圖</button>
+<button id="tabR">重點對照表</button>
+</div>
+
+<section id="viewS"></section>
+
+<section id="viewT" class="hide big">
+<div class="note" id="syncNote"></div>
+<div class="card"><h2><span>填答統計</span></h2>
+<button class="btn" id="statBtn">更新填答統計</button> <span class="note" id="statMsg"></span>
+<div id="stats"><p class="note">按上方按鈕載入。</p></div></div>
+<div id="tList"></div>
+<button class="btn alt" id="nextBtn">顯示下一題答案</button>
+<button class="btn alt" id="resetBtn">全部隱藏</button>
+</section>
+
+<section id="viewD" class="hide">
+<div class="card">
+<h2><span>神經系統的分類與組成</span></h2>
+<div class="note">依《身體檢查與評估》第 3 版第 7 章（7-3～7-5、7-17～7-18）整理。點節點上的 ＋／－ 可以單獨展開或收合。</div>
+<div style="margin:10px 0">
+<button class="btn alt" id="dNext">展開下一層</button>
+<button class="btn alt" id="dPrev">收合一層</button>
+<button class="btn alt" id="dAll">全部展開</button>
+<button class="btn alt" id="dOne">只留第一層</button>
+<span class="note" id="dLvl" style="margin-left:8px"></span>
+</div>
+<div id="treebox"></div>
+</div>
+</section>
+
+<section id="viewR" class="hide">
+<table>
+<tr><th>主題</th><th>重點</th></tr>
+<tr><td>中樞神經系統 CNS</td><td>腦 ＋ 脊髓</td></tr>
+<tr><td>周邊神經系統 PNS</td><td>腦神經 12 對 ＋ 脊神經 31 對</td></tr>
+<tr><td>腦神經 12 對</td><td>感覺：第 1、2、8 對　運動：第 3、4、6、11、12 對　混合：第 5、7、9、10 對</td></tr>
+<tr><td>脊神經 31 對</td><td>頸 8、胸 12、腰 5、薦 5、尾 1</td></tr>
+<tr><td>反射弧</td><td>受器 → 感覺神經元 → 脊髓（整合）→ 運動神經元 → 效應器（肌肉）</td></tr>
+</table>
+<p class="note">出處：《身體檢查與評估》第 3 版第 7 章（7-3～7-5、7-17～7-18）。</p>
+</section>
+</main>
+
+<script>
+// ===== 設定 =====
+// 學生按「送出作答」時，作答會傳到這個網址（Google Apps Script 網頁應用程式）。留空則不送出。
+var SUBMIT_URL = "https://script.google.com/macros/s/AKfycbyJ438kyE56J9LT7kghXlw766TRY_3XLrKhc3RvKaushBzYetWZU6mirIce5OULz7Ir/exec";
+// 想讓老師按「顯示答案」後學生手機同步，需自備後端。GET 回傳 {"reveal":數字}；POST 傳 {"reveal":數字}。留空則只在本機運作。
+var SYNC_URL = "";
+var SHEET = "Warm up";
+
+var LET = ["A","B","C","D","E"];
+var CASES = [
+ {t:"題 1",
+  d:"中樞神經系統包含哪些？（可複選）",
+  o:["腦","脊髓","腦神經","脊神經"],
+  a:[0,1], multi:true,
+  why:"中樞神經系統包含腦與脊髓；腦神經與脊神經屬於周邊神經系統（書 7-3）。"},
+ {t:"題 2",
+  d:"腦神經共有幾對？",
+  o:["11","12","13","14"],
+  a:[1], multi:false,
+  why:"腦神經共 12 對（書 7-3、7-18）。"},
+ {t:"題 3",
+  d:"反射的路徑「不會」經過下列何者？",
+  o:["下視丘","受器","運動神經元","肌肉"],
+  a:[0], multi:false,
+  why:"反射弧：受器 → 感覺神經元 → 脊髓（整合）→ 運動神經元 → 效應器（肌肉）。不需經過下視丘。"}
+];
+function ansKey(c){ return c.a.slice().sort(function(x,y){return x-y;}).map(function(j){return LET[j];}).join(","); }
+
+// ===== 學生頁 =====
+var picked = {};
+CASES.forEach(function(c,i){ picked[i] = c.multi ? [] : null; });
+var vs = document.getElementById("viewS");
+var html = '<div class="card"><label for="code">姓名</label><input type="text" id="code" autocomplete="off" placeholder="請填姓名"></div>';
+CASES.forEach(function(c,i){
+ html += '<div class="card"><h2><span>'+c.t+'</span>'+(c.multi?'　<span class="note">（可複選）</span>':'')+'</h2>'+
+  '<div class="case">'+c.d+'</div>'+
+  c.o.map(function(t,j){
+   return '<button type="button" class="opt" data-i="'+i+'" data-j="'+j+'">'+(c.multi?'☐ ':'')+LET[j]+'. '+t+'</button>';
+  }).join('')+'</div>';
+});
+html += '<div class="card"><button class="btn" id="subBtn">送出作答</button> <button class="btn alt" id="copyBtn">複製我的作答</button> <span class="note" id="copyMsg"></span></div>';
+vs.innerHTML = html;
+
+function paint(i){
+ var c = CASES[i];
+ vs.querySelectorAll('button.opt[data-i="'+i+'"]').forEach(function(x){
+  var j = +x.getAttribute("data-j");
+  var on = c.multi ? (picked[i].indexOf(j) >= 0) : (picked[i] === j);
+  x.className = on ? "opt sel" : "opt";
+  x.textContent = (c.multi ? (on ? "☑ " : "☐ ") : "") + LET[j] + ". " + c.o[j];
+ });
+}
+vs.addEventListener("click", function(ev){
+ var b = ev.target.closest("button.opt");
+ if(!b || b.disabled) return;
+ var i = +b.getAttribute("data-i"), j = +b.getAttribute("data-j");
+ if(CASES[i].multi){
+  var k = picked[i].indexOf(j);
+  if(k >= 0) picked[i].splice(k,1); else picked[i].push(j);
+ } else {
+  picked[i] = j;
+ }
+ paint(i);
+});
+
+function myVal(i){
+ var c = CASES[i];
+ if(c.multi) return picked[i].slice().sort(function(x,y){return x-y;}).map(function(j){return LET[j];}).join(",");
+ return picked[i] === null ? "" : LET[picked[i]];
+}
+function unanswered(i){
+ return CASES[i].multi ? (picked[i].length === 0) : (picked[i] === null);
+}
+document.getElementById("copyBtn").onclick = function(){
+ var name = document.getElementById("code").value.trim() || "(未填姓名)";
+ var out = name + "｜" + CASES.map(function(c,i){ return "題"+(i+1)+" "+(myVal(i) || "未答"); }).join("｜");
+ var msg = document.getElementById("copyMsg");
+ if(navigator.clipboard){ navigator.clipboard.writeText(out).then(function(){ msg.textContent = "已複製"; }, function(){ msg.textContent = out; }); }
+ else { msg.textContent = out; }
+};
+function lockAll(){
+ vs.querySelectorAll("button.opt").forEach(function(x){ x.disabled = true; });
+ document.getElementById("subBtn").disabled = true;
+ document.getElementById("code").disabled = true;
+ document.getElementById("copyMsg").textContent = "已送出，謝謝！答案由老師在課堂上公布。";
+}
+document.getElementById("subBtn").onclick = function(){
+ var msg = document.getElementById("copyMsg");
+ var name = document.getElementById("code").value.trim();
+ if(!name){ msg.textContent = "請先填姓名"; return; }
+ var miss = [];
+ CASES.forEach(function(c,i){ if(unanswered(i)) miss.push(i+1); });
+ if(miss.length){ msg.textContent = "還有題目沒答：第 " + miss.join("、") + " 題"; return; }
+ if(!SUBMIT_URL){ msg.textContent = "老師尚未設定送出網址"; return; }
+ var head = ["時間","姓名"], row = [new Date().toLocaleString("zh-TW"), name];
+ CASES.forEach(function(c,i){
+  head.push("題"+(i+1), "題"+(i+1)+" 對錯");
+  row.push(myVal(i), myVal(i) === ansKey(c) ? "對" : "錯");
+ });
+ msg.textContent = "送出中…";
+ fetch(SUBMIT_URL,{method:"POST",mode:"no-cors",headers:{"Content-Type":"text/plain"},
+  body:JSON.stringify({sheet:SHEET, header:head, row:row})})
+ .then(function(){ lockAll(); }, function(){ msg.textContent = "送出失敗，請改按「複製我的作答」"; });
+};
+
+// ===== 圓餅圖（手寫 SVG）=====
+var COLORS = ["#9c7e7a","#8f9e8b","#b8a58c","#8a9aa8","#b79ab0","#c4b6a6","#7c8c86"];
+function pieSvg(counts, keys){
+ var tot = 0; keys.forEach(function(k){ tot += counts[k]||0; });
+ if(!tot) return '<svg width="150" height="150" viewBox="0 0 150 150"><circle cx="75" cy="75" r="60" fill="#e8e2dc"/></svg>';
+ var a = -Math.PI/2, out = '<svg width="150" height="150" viewBox="0 0 150 150">';
+ var used = keys.filter(function(k){ return (counts[k]||0) > 0; });
+ used.forEach(function(k){
+  var n = counts[k], col = COLORS[keys.indexOf(k) % COLORS.length];
+  if(used.length === 1){ out += '<circle cx="75" cy="75" r="60" fill="'+col+'"/>'; return; }
+  var b = a + n/tot*2*Math.PI;
+  var x1 = 75+60*Math.cos(a), y1 = 75+60*Math.sin(a), x2 = 75+60*Math.cos(b), y2 = 75+60*Math.sin(b);
+  out += '<path d="M75 75 L'+x1+' '+y1+' A60 60 0 '+((b-a)>Math.PI?1:0)+' 1 '+x2+' '+y2+' Z" fill="'+col+'" stroke="#faf7f4" stroke-width="2"/>';
+  a = b;
+ });
+ return out + '</svg>';
+}
+function renderStats(d){
+ var by = {}; (d.cols||[]).forEach(function(c){ by[c.h] = c.counts; });
+ var h = '<p><b>已作答人數：' + d.n + '</b>（不顯示姓名）</p>';
+ CASES.forEach(function(c,i){
+  var q = "題"+(i+1), ok = by[q+" 對錯"] || {}, counts = by[q] || {};
+  var right = ansKey(c);
+  var keys = c.o.map(function(t,j){ return LET[j]; });
+  if(c.multi && keys.indexOf(right) < 0) keys.push(right);
+  Object.keys(counts).forEach(function(k){ if(keys.indexOf(k) < 0) keys.push(k); });
+  h += '<h3 style="margin:14px 0 0">'+c.t+'　全對 '+(ok["對"]||0)+' 人 ／ 有錯 '+(ok["錯"]||0)+' 人</h3>';
+  h += '<div class="pies"><div class="pie">'+pieSvg(counts, keys)+'<br><div class="lg">';
+  keys.forEach(function(k,j){
+   var n = counts[k] || 0;
+   if(!n && k !== right) return;
+   h += '<div><i style="background:'+COLORS[j%COLORS.length]+'"></i>'+k+'：'+n+' 人'+(k===right?' ✓':'')+'</div>';
+  });
+  h += '</div></div></div>';
+ });
+ document.getElementById("stats").innerHTML = h;
+}
+document.getElementById("statBtn").onclick = function(){
+ var msg = document.getElementById("statMsg");
+ if(!SUBMIT_URL){ msg.textContent = "尚未設定 SUBMIT_URL"; return; }
+ msg.textContent = "讀取中…";
+ fetch(SUBMIT_URL + "?sheet=" + encodeURIComponent(SHEET)).then(function(r){
+  return r.text().then(function(t){
+   var d;
+   try { d = JSON.parse(t); }
+   catch(e){
+    msg.textContent = "讀取失敗：回應不是統計資料（" + r.status + "）：" + t.replace(/<[^>]*>/g," ").replace(/\s+/g," ").slice(0,80);
+    return;
+   }
+   renderStats(d);
+   msg.textContent = "已更新 " + new Date().toLocaleTimeString("zh-TW");
+  });
+ }).catch(function(e){
+  msg.textContent = "讀取失敗：網路或權限被擋（" + (e && e.message ? e.message : e) + "）";
+ });
+};
+
+// ===== 老師投影 =====
+var reveal = 0;
+function corrText(c){
+ return c.a.slice().sort(function(x,y){return x-y;}).map(function(j){ return LET[j]+". "+c.o[j]; }).join("、");
+}
+function renderT(){
+ var h = "";
+ CASES.forEach(function(c,i){
+  h += '<div class="card"><h2><span>'+c.t+'</span>'+(c.multi?'　<span class="note">（可複選）</span>':'')+'</h2>'+
+   '<div class="case">'+c.d+'</div>'+
+   c.o.map(function(t,j){ return '<div style="margin:6px 0">'+LET[j]+'. '+t+'</div>'; }).join('') +
+   '<div class="ans '+(i<reveal?"show":"")+'"><span class="ok">答案：'+corrText(c)+'</span><br>'+c.why+'</div></div>';
+ });
+ document.getElementById("tList").innerHTML = h;
+}
+function setReveal(n){
+ reveal = Math.max(0, Math.min(CASES.length, n)); renderT();
+ if(SYNC_URL){ try{ fetch(SYNC_URL,{method:"POST",headers:{"Content-Type":"text/plain"},body:JSON.stringify({reveal:reveal})}); }catch(e){} }
+}
+document.getElementById("nextBtn").onclick = function(){ setReveal(reveal+1); };
+document.getElementById("resetBtn").onclick = function(){ setReveal(0); };
+document.getElementById("syncNote").textContent = SYNC_URL ? "已設定同步網址" : "未設定 SYNC_URL：答案只在這個畫面顯示，不會同步到學生手機。";
+renderT();
+
+// ===== 樹狀圖（老師頁專用）=====
+var TREE = {label:'神經系統', c:'root', children:[
+ {label:'中樞神經系統', sub:'CNS', c:'cns', children:[
+  {label:'腦', sub:'Brain', children:[
+   {label:'大腦', children:[{leaf:['額、頂、顳、枕葉']}]},
+   {label:'間腦', children:[{leaf:['視丘、下視丘']}]},
+   {label:'腦幹', children:[{leaf:['中腦、橋腦、延腦']}]},
+   {label:'小腦', children:[{leaf:['協調肢體活動']}]}]},
+  {label:'脊髓', sub:'Spinal cord', children:[
+   {label:'白質', children:[{leaf:['上行徑（感覺）','下行徑（運動）']}]},
+   {label:'灰質', children:[{leaf:['前角、後角、側角']}]}]}]},
+ {label:'周邊神經系統', sub:'PNS', c:'pns', children:[
+  {label:'腦神經', sub:'12 對', children:[
+   {label:'感覺神經', children:[{leaf:['第 1、2、8 對']}]},
+   {label:'運動神經', children:[{leaf:['第 3、4、6、11、12 對']}]},
+   {label:'混合神經', children:[{leaf:['第 5、7、9、10 對']}]}]},
+  {label:'脊神經', sub:'31 對', children:[{leaf:['頸 8、胸 12、腰 5','薦 5、尾 1']}]}]}]};
+
+var XS = [16,124,262,398,520], WS = [84,112,108,96,140], PITCH = 50;
+var T = {exp:new Set(), level:0};
+function esc(s){ return String(s).replace(/[&<>"]/g, function(ch){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[ch]; }); }
+function walk(n, d, c, path){
+ n._d = d; n._id = path; n.c = n.c || c;
+ (n.children||[]).forEach(function(k,i){ walk(k, d+1, n.c, path+'.'+i); });
+}
+walk(TREE, 0, 'root', 'r');
+function allNodes(n, out){ out.push(n); (n.children||[]).forEach(function(k){ allNodes(k, out); }); return out; }
+function curDepth(){
+ var m = 0;
+ allNodes(TREE, []).forEach(function(n){ if(T.exp.has(n._id) && n.children && n.children.length) m = Math.max(m, n._d+1); });
+ return m;
+}
+function setLevel(L){
+ T.level = Math.max(0, Math.min(4, L));
+ T.exp = new Set();
+ allNodes(TREE, []).forEach(function(n){ if(n.children && n.children.length && n._d < T.level) T.exp.add(n._id); });
+ renderTree();
+}
+function toggleNode(id){ if(T.exp.has(id)) T.exp.delete(id); else T.exp.add(id); T.level = -1; renderTree(); }
+function layout(n, st){
+ var kids = n.children || [];
+ if(T.exp.has(n._id) && kids.length){
+  kids.forEach(function(k){ layout(k, st); if(n._d === 0) st.row += 0.3; });
+  n._y = (kids[0]._y + kids[kids.length-1]._y)/2;
+ } else { n._y = st.row; st.row += 1; }
+}
+function treeSvg(){
+ var st = {row:0}; layout(TREE, st);
+ var conns = [], nodes = [];
+ function draw(n){
+  var leaf = !!n.leaf, x = XS[n._d], w = leaf ? (664 - x) : WS[n._d], yc = 30 + n._y*PITCH;
+  var kids = n.children || [], open = T.exp.has(n._id) && kids.length;
+  if(open){
+   var nx = XS[n._d+1], xm = x + w + (nx - (x+w))/2;
+   var ys = kids.map(function(k){ return 30 + k._y*PITCH; });
+   conns.push('<path d="M'+(x+w)+' '+yc+'H'+xm+'M'+xm+' '+Math.min.apply(null,ys)+'V'+Math.max.apply(null,ys)+ys.map(function(y){ return 'M'+xm+' '+y+'H'+nx; }).join('')+'"/>');
+   kids.forEach(draw);
+  }
+  var cls = 'nd ' + (leaf ? 'leaf' : n.c) + (kids.length ? ' exp' : ''), t = '';
+  if(leaf){
+   var L = n.leaf;
+   L.forEach(function(s,i){
+    var y = (L.length === 1) ? yc : yc + (i - (L.length-1)/2)*16;
+    t += '<text class="s" x="'+(x+w/2)+'" y="'+y+'" text-anchor="middle" dominant-baseline="central">'+esc(s)+'</text>';
+   });
+  } else if(n.sub){
+   t = '<text x="'+(x+w/2)+'" y="'+(yc-7)+'" text-anchor="middle" dominant-baseline="central" font-weight="500">'+esc(n.label)+'</text>'+
+       '<text class="s" x="'+(x+w/2)+'" y="'+(yc+9)+'" text-anchor="middle" dominant-baseline="central">'+esc(n.sub)+'</text>';
+  } else {
+   t = '<text x="'+(x+w/2)+'" y="'+yc+'" text-anchor="middle" dominant-baseline="central" font-weight="500">'+esc(n.label)+'</text>';
+  }
+  var ind = kids.length ? '<g class="ind"><circle cx="'+(x+w)+'" cy="'+yc+'" r="9"/><text x="'+(x+w)+'" y="'+yc+'" text-anchor="middle" dominant-baseline="central">'+(open?'−':'+')+'</text></g>' : '';
+  nodes.push('<g class="'+cls+'"'+(kids.length ? ' data-id="'+n._id+'"' : '')+'><rect x="'+x+'" y="'+(yc-20)+'" width="'+w+'" height="40" rx="6"/>'+t+ind+'</g>');
+ }
+ draw(TREE);
+ var H = Math.ceil(30 + st.row*PITCH + 10);
+ return '<svg viewBox="0 0 680 '+H+'" role="img" aria-label="神經系統樹狀圖"><g class="conn">'+conns.join('')+'</g>'+nodes.join('')+'</svg>';
+}
+function renderTree(){
+ var el = document.getElementById("treebox");
+ if(!el) return;
+ el.innerHTML = treeSvg();
+ document.getElementById("dLvl").textContent = (T.level < 0) ? "目前：自訂展開" : ("目前：第 " + T.level + " 層");
+ el.querySelectorAll(".nd.exp").forEach(function(g){
+  g.addEventListener("click", function(){ toggleNode(g.getAttribute("data-id")); });
+ });
+}
+document.getElementById("dNext").onclick = function(){ setLevel((T.level < 0 ? curDepth() : T.level) + 1); };
+document.getElementById("dPrev").onclick = function(){ setLevel((T.level < 0 ? curDepth() : T.level) - 1); };
+document.getElementById("dAll").onclick = function(){ setLevel(4); };
+document.getElementById("dOne").onclick = function(){ setLevel(1); };
+
+// ===== 分頁 =====
+var tabs = {tabS:"viewS", tabT:"viewT", tabD:"viewD", tabR:"viewR"};
+Object.keys(tabs).forEach(function(k){
+ document.getElementById(k).onclick = function(){
+  Object.keys(tabs).forEach(function(j){
+   document.getElementById(j).className = (j===k) ? "on" : "";
+   document.getElementById(tabs[j]).className = (j===k) ? (j==="tabT"?"big":"") : ("hide" + (j==="tabT"?" big":""));
+  });
+  if(k === "tabD") setLevel(T.level < 0 ? 0 : T.level);
+ };
+});
+function applyMode(){
+ var teacher = (location.hash === "#teacher");
+ document.getElementById("tabsBar").className = teacher ? "tabs" : "tabs hide";
+ if(teacher){ document.getElementById("tabT").click(); document.getElementById("statBtn").click(); }
+ else {
+  document.getElementById("viewS").className = "";
+  document.getElementById("viewT").className = "hide big";
+  document.getElementById("viewD").className = "hide";
+  document.getElementById("viewR").className = "hide";
+ }
+}
+window.addEventListener("hashchange", applyMode);
+applyMode();
+</script>
+</body>
+</html>
