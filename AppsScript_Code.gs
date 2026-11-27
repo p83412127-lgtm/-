@@ -113,7 +113,11 @@ function answers_() {
   for (var i = 1; i < v.length; i++) {
     var id = s_(v[i][1]), nm = s_(v[i][2]);
     if (!id && !nm) continue;
-    var r = { time: s_(v[i][0]), id: id, name: nm, right: v[i][4], total: v[i][5], detail: s_(v[i][7]) };
+    var tv = v[i][0];
+    var tstr = (tv instanceof Date)
+      ? Utilities.formatDate(tv, ss_().getSpreadsheetTimeZone(), "yyyy/MM/dd HH:mm:ss")
+      : s_(tv);
+    var r = { time: tstr, id: id, name: nm, right: v[i][4], total: v[i][5], detail: s_(v[i][7]) };
     rows.push(r);
     if (id) byId[id] = r;
     if (nm) byName[nm] = r;
