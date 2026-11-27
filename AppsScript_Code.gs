@@ -181,9 +181,15 @@ function pickFor_(seed) {
 }
 
 /***** API *****/
+function tips_() {
+  var t = s_(conf_()["考前提示"]);
+  if (!t) return [];
+  return t.split(/[｜|\n\r]+/).map(s_).filter(function (x) { return x !== ""; });
+}
+
 function apiMode_() {
   var c = conf_();
-  return { ok: true, mode: mode_(), title: s_(c["測驗名稱"]) || "神經系統練習" };
+  return { ok: true, mode: mode_(), title: s_(c["測驗名稱"]) || "神經系統練習", tips: tips_() };
 }
 
 function apiQuiz_(p) {

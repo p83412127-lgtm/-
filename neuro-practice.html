@@ -50,8 +50,16 @@ td.l{text-align:left}
 .names span{border:1px solid var(--line);background:#faf7f4;border-radius:6px;padding:3px 8px;font-size:15px}
 .hide{display:none}
 .note{font-size:13px;color:#777}
-.warn{border:2px solid var(--acc);background:#f7f0ee;border-radius:12px;padding:14px 16px;margin:14px 0}
-.warn h3{margin:0 0 6px;font-size:18px;color:#7a5f5b}
+.warn{border:3px solid var(--bad);background:#f8eeee;border-radius:12px;padding:16px;margin:14px 0}
+.warn h3{margin:0 0 8px;font-size:21px;color:#8e4f51}
+.warn .big-warn{font-size:18px}
+.tips{border:1px solid var(--line);background:#fff;border-radius:12px;padding:16px;margin:14px 0}
+.tips h3{margin:0 0 8px;font-size:19px;color:#7a5f5b}
+.tips ol{margin:0;padding-left:1.4em;font-size:17px}
+.tips li{margin:10px 0;line-height:1.7}
+.agree{display:flex;align-items:flex-start;gap:10px;margin:14px 0;font-weight:bold;font-size:17px;color:var(--gray);
+  border:2px solid var(--acc);background:#f7f0ee;border-radius:12px;padding:14px 16px}
+.agree input{width:22px;height:22px;flex:none;margin-top:2px}
 .flag{border:1px solid #d8c7a8;background:#f7f1e4;border-radius:10px;padding:10px 14px;margin:10px 0;font-size:15px;color:#7a6440}
 .big .case{font-size:24px}.big .card h2{font-size:26px}.big .ans{font-size:21px}
 svg{width:100%;height:auto;display:block}
@@ -74,12 +82,18 @@ svg{width:100%;height:auto;display:block}
 
 <!-- ===== 學生頁 ===== -->
 <section id="viewS">
-  <div id="examWarn" class="warn hide">
-    <h3>⚠ 本次為「考試模式」</h3>
-    <div>這個頁面<b>只能開啟一次</b>。一旦你離開這個頁面 —— 切換到其他分頁或 App、按上一頁、重新整理、或關掉頁面 —— <b>本次作答就會失效，無法交卷</b>。</div>
-    <div style="margin-top:6px">請先把其他 App 關掉、把手機通知關靜音，確定可以一次作答完再開始。如果真的被通知或來電打斷，請舉手告訴老師，老師可以幫你解除鎖定重新作答。</div>
-    <label style="display:flex;align-items:center;gap:8px;margin-top:10px;font-weight:normal;color:var(--gray)">
-      <input type="checkbox" id="agree" style="width:18px;height:18px"> 我已了解上面的規則
+  <div id="examWarn" class="hide">
+    <div class="warn">
+      <h3>⚠ 本次為「考試模式」</h3>
+      <div class="big-warn">這個頁面<b>只能開啟一次</b>。一旦你離開這個頁面 —— 切換到其他分頁或 App、接電話、按上一頁、重新整理、或關掉頁面 —— <b>本次作答就會失效，無法交卷</b>。</div>
+      <div style="margin-top:8px">如果真的被通知或來電打斷，請舉手告訴老師，老師可以幫你解除鎖定重新作答。</div>
+    </div>
+    <div class="tips">
+      <h3>開始前請先做這三件事</h3>
+      <ol id="tipList"></ol>
+    </div>
+    <label class="agree">
+      <input type="checkbox" id="agree"> 我已經做完上面三件事，也了解離開頁面就無法交卷
     </label>
   </div>
 
@@ -200,7 +214,7 @@ function readLocal(){ try{ return JSON.parse(localStorage.getItem(LSKEY) || "nul
 
 /* ===== 畫面切換 ===== */
 function showDone(who, time){
-  el("examWarn").className = "warn hide";
+  el("examWarn").className = "hide";
   el("identBox").className = "card hide";
   el("quizBox").innerHTML = "";
   el("deadBox").className = "card done dead hide";
@@ -209,12 +223,21 @@ function showDone(who, time){
   el("doneTime").textContent = time || "—";
 }
 function showDead(why){
-  el("examWarn").className = "warn hide";
+  el("examWarn").className = "hide";
   el("identBox").className = "card hide";
   el("quizBox").innerHTML = "";
   el("doneBox").className = "card done hide";
   el("deadBox").className = "card done dead";
   el("deadWhy").textContent = why || "離開了作答頁面。";
+}
+
+function renderTips(tips){
+  var t = (tips && tips.length) ? tips : [
+    "開啟勿擾／專注模式。iPhone：從右上角往下滑開啟控制中心，點月亮圖示「專注模式／勿擾模式」。Android：從螢幕上方往下滑開啟快速設定，點「勿擾」圖示。",
+    "關掉其他 App，不要接電話，不要切換到其他分頁或 App。",
+    "螢幕不要讓它自動鎖定。考試只有大約 10 分鐘，中途不要放下手機。"
+  ];
+  el("tipList").innerHTML = t.map(function(x){ return "<li>" + esc(x) + "</li>"; }).join("");
 }
 
 /* ===== 考試模式守門 ===== */
@@ -306,7 +329,7 @@ function start(){
     if(d.mode) MODE = d.mode;
     QS = d.qs || [];
     msg.textContent = "";
-    el("examWarn").className = "warn hide";
+    el("examWarn").className = "hide";
     el("identBox").querySelectorAll("input").forEach(function(x){ x.disabled = true; });
     el("startBtn").disabled = true;
     renderQuiz();
@@ -342,7 +365,8 @@ function bootStudent(){
       MODE = d.mode;
       if(d.title){ el("ttl").textContent = d.title; document.title = d.title; }
       if(MODE === "考試"){
-        el("examWarn").className = "warn";
+        renderTips(d.tips);
+        el("examWarn").className = "";
         el("sub").textContent = "考試模式：頁面只能開啟一次，離開頁面即無法交卷";
       }
     }
@@ -359,7 +383,7 @@ function bootStudent(){
     if(d.dead){ showDead("本次作答已失效（" + (d.why || "離開頁面") + "）。"); return; }
     el("doneBox").className = "card done hide";
     el("identBox").className = "card";
-    if(MODE === "考試") el("examWarn").className = "warn";
+    if(MODE === "考試"){ renderTips(null); el("examWarn").className = ""; }
     el("identMsg").textContent = "試算表沒有你的紀錄，請重新作答一次";
   }, function(){});
 }
