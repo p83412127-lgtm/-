@@ -1,0 +1,418 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>神經系統練習</title>
+<style>
+:root{--acc:#9c7e7a;--gray:#4a4744;--light:#efe9e4;--line:#d8cfc7;--ok:#7d8f7a;--bad:#a8686a}
+*{box-sizing:border-box}
+body{margin:0;font-family:Arial,"Noto Sans TC","Microsoft JhengHei",sans-serif;color:var(--gray);background:#faf7f4;line-height:1.6}
+header{padding:20px 16px 8px;text-align:center}
+h1{margin:0;font-size:28px}
+.sub{color:#777;font-size:14px}
+main{max-width:900px;margin:0 auto;padding:8px 16px 48px}
+.tabs{display:flex;gap:8px;justify-content:center;margin:12px 0;flex-wrap:wrap}
+.tabs button{border:2px solid var(--acc);background:#faf7f4;color:#7a5f5b;padding:8px 18px;border-radius:8px;font-size:16px;cursor:pointer}
+.tabs button.on{background:var(--acc);color:#fff}
+.card{border:1px solid var(--line);border-radius:12px;padding:16px;margin:14px 0;background:#fff}
+.card h2{margin:0 0 6px;font-size:20px}
+.card h2 span{color:var(--acc)}
+.case{font-size:18px}
+label{font-weight:bold;font-size:14px;color:var(--acc);display:block;margin-top:6px}
+input[type=text]{width:100%;padding:8px;border:1px solid var(--line);border-radius:8px;font-size:16px}
+.row{display:flex;gap:10px;flex-wrap:wrap}
+.col{flex:1;min-width:150px}
+.opt{display:block;width:100%;text-align:left;margin:8px 0;padding:11px 14px;font-size:17px;border:1px solid var(--line);border-radius:8px;background:#faf7f4;color:var(--gray);cursor:pointer}
+.opt.sel{border-color:var(--acc);background:var(--light);box-shadow:inset 0 0 0 1px var(--acc)}
+.opt[disabled]{cursor:default;opacity:.85}
+.btn{background:var(--acc);color:#fff;border:0;border-radius:8px;padding:9px 18px;font-size:16px;cursor:pointer;margin-top:10px}
+.btn.alt{background:#faf7f4;color:#7a5f5b;border:2px solid var(--acc)}
+.btn[disabled]{opacity:.6;cursor:default}
+.ans{margin-top:10px;padding:10px;border-radius:8px;background:var(--light)}
+.ok{color:var(--ok);font-weight:bold}.bad{color:var(--bad);font-weight:bold}
+.done{text-align:center;padding:26px 16px}
+.done .tick{font-size:46px;color:var(--ok);line-height:1}
+.done h2{font-size:26px;margin:8px 0 4px;color:var(--gray)}
+table{border-collapse:collapse;width:100%;margin-top:8px;font-size:15px}
+th,td{border:1px solid var(--line);padding:6px 8px;text-align:center}
+th{background:var(--acc);color:#fff}
+td.l{text-align:left}
+.pies{display:flex;gap:14px;flex-wrap:wrap;margin-top:8px}
+.pie{flex:1;min-width:220px;text-align:center}
+.lg{font-size:15px;text-align:left;display:inline-block}
+.lg i{display:inline-block;width:12px;height:12px;border-radius:3px;margin-right:6px;vertical-align:middle}
+.bar{height:10px;background:var(--light);border-radius:6px;overflow:hidden;margin-top:4px}
+.bar i{display:block;height:100%;background:var(--acc)}
+.names{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.names span{border:1px solid var(--line);background:#faf7f4;border-radius:6px;padding:3px 8px;font-size:15px}
+.hide{display:none}
+.note{font-size:13px;color:#777}
+.warn{font-size:13px;color:#8a6f52;background:#f5efe7;border:1px solid #e2d6c6;border-radius:8px;padding:8px 10px;margin-top:8px}
+.big .case{font-size:24px}.big .card h2{font-size:26px}.big .ans{font-size:21px}
+svg{width:100%;height:auto;display:block}
+</style>
+</head>
+<body>
+<header>
+<h1 id="ttl">神經系統練習</h1>
+<div class="sub" id="sub">每人題目與選項順序不同；答案由老師在課堂上公布</div>
+</header>
+<main>
+<div class="tabs hide" id="tabsBar">
+<button id="tabA" class="on">填答統計</button>
+<button id="tabB">題目與答案（投影）</button>
+<button id="tabC">未繳交名單</button>
+</div>
+
+<!-- ===== 學生頁 ===== -->
+<section id="viewS">
+  <div id="identBox" class="card">
+    <h2><span>開始作答</span></h2>
+    <div class="row">
+      <div class="col"><label for="sid">學號（必填）</label><input type="text" id="sid" autocomplete="off" placeholder="請填學號"></div>
+      <div class="col"><label for="nm">姓名（必填）</label><input type="text" id="nm" autocomplete="off" placeholder="請填真實姓名"></div>
+    </div>
+    <button class="btn" id="startBtn">開始作答</button>
+    <span class="note" id="identMsg"></span>
+    <div class="note" style="margin-top:8px">學號與姓名都要對得上班級名單才能作答；一個學號只能繳交一次。</div>
+  </div>
+  <div id="quizBox"></div>
+  <div id="doneBox" class="card done hide">
+    <div class="tick">✓</div>
+    <h2>答案已繳交</h2>
+    <div id="doneWho" class="note"></div>
+    <div style="font-size:18px;margin-top:6px">繳交時間：<b id="doneTime">—</b></div>
+    <p class="note" style="margin-top:12px">不能再修改或重複送出。分數與正確答案不在這裡顯示，由老師在課堂上公布。</p>
+  </div>
+</section>
+
+<!-- ===== 老師：填答統計 ===== -->
+<section id="viewA" class="hide big">
+  <div class="card">
+    <h2><span>填答統計</span></h2>
+    <button class="btn" id="statBtn">更新填答統計</button>
+    <button class="btn alt" id="csvBtn">匯出 CSV</button>
+    <span class="note" id="statMsg"></span>
+    <div id="statHead"></div>
+  </div>
+  <div id="stats"></div>
+</section>
+
+<!-- ===== 老師：題目與答案 ===== -->
+<section id="viewB" class="hide big">
+  <div class="card">
+    <h2><span>題目與答案</span></h2>
+    <button class="btn alt" id="bankBtn">載入題庫</button>
+    <button class="btn alt" id="nextBtn">顯示下一題答案</button>
+    <button class="btn alt" id="resetBtn">全部隱藏</button>
+    <span class="note" id="bankMsg"></span>
+    <div class="note" style="margin-top:6px">這裡顯示的是題庫的原始順序；學生看到的順序每人不同。</div>
+  </div>
+  <div id="bankList"></div>
+</section>
+
+<!-- ===== 老師：未繳交名單 ===== -->
+<section id="viewC" class="hide">
+  <div class="card">
+    <h2><span>未繳交名單</span></h2>
+    <button class="btn" id="missBtn">更新名單</button>
+    <span class="note" id="missMsg"></span>
+    <div id="missBox"></div>
+    <div class="note" style="margin-top:8px">對照「班級名單」分頁，列出還沒繳交的人。統計區不顯示任何人答了什麼。</div>
+  </div>
+</section>
+</main>
+
+<script>
+/* ===== 設定 ===== */
+var SUBMIT_URL = "https://script.google.com/macros/s/AKfycbyJ438kyE56J9LT7kghXlw766TRY_3XLrKhc3RvKaushBzYetWZU6mirIce5OULz7Ir/exec";
+var SYNC_URL = "";
+var LSKEY = "neuro_practice_v1";
+
+var LET = ["A","B","C","D","E","F"];
+var COLORS = ["#9c7e7a","#8f9e8b","#b8a58c","#8a9aa8","#b79ab0","#c4b6a6","#7c8c86"];
+var QS = [], picked = {}, lastStats = null, reveal = 0, BANK = [];
+
+function esc(s){ return String(s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];}); }
+function el(id){ return document.getElementById(id); }
+
+function api(params){
+  if(!SUBMIT_URL) return Promise.reject(new Error("老師尚未設定送出網址"));
+  var u = SUBMIT_URL + "?" + Object.keys(params).map(function(k){
+    return encodeURIComponent(k) + "=" + encodeURIComponent(params[k]);
+  }).join("&");
+  return fetch(u).then(function(r){
+    return r.text().then(function(t){
+      var d;
+      try { d = JSON.parse(t); }
+      catch(e){ throw new Error("回應不是資料（HTTP " + r.status + "）：" + t.replace(/<[^>]*>/g," ").replace(/\s+/g," ").slice(0,80)); }
+      return d;
+    });
+  });
+}
+
+/* ===== 本機鎖定（容易被繞過，只是減少誤觸） ===== */
+function saveLocal(o){ try{ localStorage.setItem(LSKEY, JSON.stringify(o)); }catch(e){} }
+function readLocal(){ try{ return JSON.parse(localStorage.getItem(LSKEY) || "null"); }catch(e){ return null; } }
+
+/* ===== 學生頁 ===== */
+function showDone(who, time){
+  el("identBox").className = "card hide";
+  el("quizBox").innerHTML = "";
+  el("doneBox").className = "card done";
+  el("doneWho").textContent = who || "";
+  el("doneTime").textContent = time || "—";
+}
+
+function renderQuiz(){
+  picked = {};
+  QS.forEach(function(q,i){ picked[i] = q.multi ? [] : null; });
+  var h = "";
+  QS.forEach(function(q,i){
+    h += '<div class="card"><h2><span>題 '+(i+1)+'</span>'+(q.multi?'　<span class="note">（可複選）</span>':'')+'</h2>'+
+      '<div class="case">'+esc(q.q)+'</div>'+
+      q.opts.map(function(t,j){
+        return '<button type="button" class="opt" data-i="'+i+'" data-j="'+j+'">'+(q.multi?'☐ ':'')+LET[j]+'. '+esc(t)+'</button>';
+      }).join('')+'</div>';
+  });
+  h += '<div class="card"><button class="btn" id="subBtn">送出作答</button> '+
+       '<button class="btn alt" id="copyBtn">複製我的作答</button> <span class="note" id="subMsg"></span>'+
+       '<div class="note" style="margin-top:6px">送出後就不能修改，請確認再按。</div></div>';
+  el("quizBox").innerHTML = h;
+
+  el("quizBox").addEventListener("click", function(ev){
+    var b = ev.target.closest("button.opt");
+    if(!b || b.disabled) return;
+    var i = +b.getAttribute("data-i"), j = +b.getAttribute("data-j");
+    if(QS[i].multi){
+      var k = picked[i].indexOf(j);
+      if(k >= 0) picked[i].splice(k,1); else picked[i].push(j);
+    } else { picked[i] = j; }
+    paint(i);
+  });
+  el("subBtn").onclick = submit;
+  el("copyBtn").onclick = copyMine;
+}
+function paint(i){
+  var q = QS[i];
+  el("quizBox").querySelectorAll('button.opt[data-i="'+i+'"]').forEach(function(x){
+    var j = +x.getAttribute("data-j");
+    var on = q.multi ? (picked[i].indexOf(j) >= 0) : (picked[i] === j);
+    x.className = on ? "opt sel" : "opt";
+    x.textContent = (q.multi ? (on ? "☑ " : "☐ ") : "") + LET[j] + ". " + q.opts[j];
+  });
+}
+function mine(i){
+  var q = QS[i];
+  if(q.multi) return picked[i].slice().sort().map(function(j){ return q.opts[j]; });
+  return picked[i] === null ? [] : [q.opts[picked[i]]];
+}
+function copyMine(){
+  var out = el("sid").value.trim() + " " + el("nm").value.trim() + "｜" +
+    QS.map(function(q,i){ var a = mine(i); return "題"+(i+1)+" "+(a.length?a.join("＋"):"未答"); }).join("｜");
+  var msg = el("subMsg");
+  if(navigator.clipboard){ navigator.clipboard.writeText(out).then(function(){ msg.textContent = "已複製"; }, function(){ msg.textContent = out; }); }
+  else { msg.textContent = out; }
+}
+
+function start(){
+  var sid = el("sid").value.trim(), nm = el("nm").value.trim(), msg = el("identMsg");
+  if(!sid){ msg.textContent = "請填學號"; return; }
+  if(!nm){ msg.textContent = "請填姓名"; return; }
+  msg.textContent = "檢查名單中…";
+  api({action:"quiz", sid:sid, name:nm}).then(function(d){
+    if(!d.ok){ msg.textContent = d.why || "無法開始作答"; return; }
+    if(d.done){ saveLocal({sid:sid, name:nm, time:d.time}); showDone(nm, d.time); return; }
+    if(d.title){ el("ttl").textContent = d.title; document.title = d.title; }
+    QS = d.qs || [];
+    msg.textContent = "";
+    el("identBox").querySelectorAll("input").forEach(function(x){ x.disabled = true; });
+    el("startBtn").disabled = true;
+    renderQuiz();
+  }, function(e){ msg.textContent = "連線失敗：" + e.message; });
+}
+
+function submit(){
+  var msg = el("subMsg"), sid = el("sid").value.trim(), nm = el("nm").value.trim();
+  var miss = [];
+  QS.forEach(function(q,i){ if(!mine(i).length) miss.push(i+1); });
+  if(miss.length){ msg.textContent = "還有題目沒答：第 " + miss.join("、") + " 題"; return; }
+  var payload = QS.map(function(q,i){ return {no:q.no, a:mine(i)}; });
+  el("subBtn").disabled = true;
+  msg.textContent = "送出中…";
+  api({action:"submit", sid:sid, name:nm, payload:JSON.stringify(payload), ua:navigator.userAgent})
+  .then(function(d){
+    if(!d.ok){ msg.textContent = d.why || "送出失敗"; el("subBtn").disabled = false; return; }
+    saveLocal({sid:sid, name:nm, time:d.time});
+    showDone(nm, d.time);
+  }, function(e){
+    msg.textContent = "送出失敗（" + e.message + "），請改按「複製我的作答」交給老師";
+    el("subBtn").disabled = false;
+  });
+}
+
+function bootStudent(){
+  el("startBtn").onclick = start;
+  var L = readLocal();
+  if(!L || !L.sid) return;
+  el("sid").value = L.sid; el("nm").value = L.name || "";
+  showDone(L.name, L.time);
+  api({action:"status", sid:L.sid, name:L.name||""}).then(function(d){
+    if(d && d.ok && d.done){ el("doneTime").textContent = d.time; saveLocal({sid:L.sid, name:L.name, time:d.time}); }
+    else if(d && d.ok && !d.done){
+      el("doneBox").className = "card done hide";
+      el("identBox").className = "card";
+      el("identMsg").textContent = "試算表沒有你的紀錄，請重新作答一次";
+    }
+  }, function(){});
+}
+
+/* ===== 圓餅圖（手寫 SVG） ===== */
+function pieSvg(counts, keys){
+  var tot = 0; keys.forEach(function(k){ tot += counts[k]||0; });
+  if(!tot) return '<svg width="150" height="150" viewBox="0 0 150 150"><circle cx="75" cy="75" r="60" fill="#e8e2dc"/></svg>';
+  var a = -Math.PI/2, out = '<svg width="150" height="150" viewBox="0 0 150 150">';
+  var used = keys.filter(function(k){ return (counts[k]||0) > 0; });
+  used.forEach(function(k){
+    var n = counts[k], col = COLORS[keys.indexOf(k) % COLORS.length];
+    if(used.length === 1){ out += '<circle cx="75" cy="75" r="60" fill="'+col+'"/>'; return; }
+    var b = a + n/tot*2*Math.PI;
+    var x1 = 75+60*Math.cos(a), y1 = 75+60*Math.sin(a), x2 = 75+60*Math.cos(b), y2 = 75+60*Math.sin(b);
+    out += '<path d="M75 75 L'+x1+' '+y1+' A60 60 0 '+((b-a)>Math.PI?1:0)+' 1 '+x2+' '+y2+' Z" fill="'+col+'" stroke="#faf7f4" stroke-width="2"/>';
+    a = b;
+  });
+  return out + '</svg>';
+}
+
+function renderStats(d){
+  lastStats = d;
+  el("statHead").innerHTML =
+    '<p><b>已繳交：'+d.n+' 人</b>　名單 '+d.rosterN+' 人　未繳交 '+(d.missing||[]).length+' 人'+
+    '<br>全對 '+d.allRight+' 人 ／ 有錯 '+d.someWrong+' 人</p>'+
+    '<p class="note">抽題數 '+d.conf.pick+'　類別 '+(d.conf.cats||"全部")+
+    '　開放時間 '+((d.conf.start||d.conf.end) ? (d.conf.start||"不限")+" ～ "+(d.conf.end||"不限") : "不限制")+
+    '　更新 '+d.updated+'（統計不顯示姓名）</p>';
+  var h = "";
+  (d.perQ||[]).forEach(function(q){
+    var keys = q.opts.slice();
+    Object.keys(q.counts).forEach(function(k){ if(keys.indexOf(k) < 0) keys.push(k); });
+    h += '<div class="card"><h2><span>'+esc(q.no)+'</span>　答對率 '+q.rate+'%（'+q.right+'／'+q.n+'）</h2>'+
+      '<div class="bar"><i style="width:'+q.rate+'%"></i></div>'+
+      '<div class="case" style="margin-top:8px">'+esc(q.q)+'</div>'+
+      '<div class="pies"><div class="pie">'+pieSvg(q.counts, keys)+'<br><div class="lg">';
+    keys.forEach(function(k,j){
+      var n = q.counts[k] || 0, right = q.ans.indexOf(k) >= 0;
+      if(!n && !right) return;
+      h += '<div><i style="background:'+COLORS[j%COLORS.length]+'"></i>'+esc(k)+'：'+n+' 人'+(right?' ✓':'')+'</div>';
+    });
+    h += '</div></div></div></div>';
+  });
+  el("stats").innerHTML = h || '<p class="note">還沒有人繳交。</p>';
+}
+
+function loadStats(){
+  var msg = el("statMsg");
+  msg.textContent = "讀取中…";
+  api({action:"stats"}).then(function(d){
+    if(!d.ok){ msg.textContent = "讀取失敗：" + (d.why||"後端回了錯誤"); return; }
+    renderStats(d);
+    renderMissing(d);
+    msg.textContent = "已更新 " + new Date().toLocaleTimeString("zh-TW");
+  }, function(e){ msg.textContent = "讀取失敗：" + e.message; });
+}
+
+function renderMissing(d){
+  var m = d.missing || [];
+  el("missBox").innerHTML = '<p><b>未繳交 '+m.length+' 人</b>（名單 '+d.rosterN+' 人，已繳交 '+d.n+' 人）</p>'+
+    (m.length ? '<div class="names">'+m.map(function(x){ return '<span>'+esc(x)+'</span>'; }).join('')+'</div>'
+              : '<p class="ok">全班都繳交了。</p>');
+  el("missMsg").textContent = "已更新 " + (d.updated || "");
+}
+
+function exportCsv(){
+  if(!lastStats){ el("statMsg").textContent = "請先按「更新填答統計」"; return; }
+  var d = lastStats, L = [];
+  L.push(["題號","題幹","正解","作答人數","答對人數","答對率%"]);
+  (d.perQ||[]).forEach(function(q){ L.push([q.no, q.q, q.ans.join("＋"), q.n, q.right, q.rate]); });
+  L.push([]);
+  L.push(["題號","選項","選的人數","是否正解"]);
+  (d.perQ||[]).forEach(function(q){
+    var keys = q.opts.slice();
+    Object.keys(q.counts).forEach(function(k){ if(keys.indexOf(k) < 0) keys.push(k); });
+    keys.forEach(function(k){ L.push([q.no, k, q.counts[k]||0, q.ans.indexOf(k)>=0 ? "正解" : ""]); });
+  });
+  L.push([]);
+  L.push(["未繳交名單"]);
+  (d.missing||[]).forEach(function(x){ L.push([x]); });
+  var csv = "﻿" + L.map(function(r){
+    return r.map(function(c){ return '"' + String(c === undefined ? "" : c).replace(/"/g,'""') + '"'; }).join(",");
+  }).join("\r\n");
+  var a = document.createElement("a");
+  a.href = URL.createObjectURL(new Blob([csv], {type:"text/csv;charset=utf-8"}));
+  a.download = "神經系統練習_統計.csv";
+  a.click();
+}
+
+/* ===== 老師：題目與答案 ===== */
+function renderBank(){
+  var h = "";
+  BANK.forEach(function(q,i){
+    h += '<div class="card"><h2><span>'+esc(q.no)+'</span>　<span class="note">'+esc(q.cat)+'／'+esc(q.lvl)+'</span></h2>'+
+      '<div class="case">'+esc(q.q)+'</div>'+
+      q.opts.map(function(t,j){ return '<div style="margin:6px 0">'+LET[j]+'. '+esc(t)+'</div>'; }).join('')+
+      (i < reveal ? '<div class="ans"><span class="ok">答案：'+esc(q.ans.join("＋"))+'</span><br>'+esc(q.why)+'</div>' : '')+
+      '</div>';
+  });
+  el("bankList").innerHTML = h || '<p class="note">按「載入題庫」。</p>';
+}
+function loadBank(){
+  var msg = el("bankMsg");
+  msg.textContent = "讀取中…";
+  api({action:"bank"}).then(function(d){
+    if(!d.ok){ msg.textContent = "讀取失敗：" + (d.why||""); return; }
+    BANK = d.items || []; reveal = 0; renderBank();
+    msg.textContent = "共 " + BANK.length + " 題（啟用）";
+  }, function(e){ msg.textContent = "讀取失敗：" + e.message; });
+}
+
+/* ===== 分頁 ===== */
+var tabs = {tabA:"viewA", tabB:"viewB", tabC:"viewC"};
+Object.keys(tabs).forEach(function(k){
+  el(k).onclick = function(){
+    Object.keys(tabs).forEach(function(j){
+      el(j).className = (j === k) ? "on" : "";
+      var big = (j === "tabA" || j === "tabB") ? " big" : "";
+      el(tabs[j]).className = (j === k) ? big.trim() : ("hide" + big);
+    });
+    if(k === "tabB" && !BANK.length) loadBank();
+  };
+});
+
+el("statBtn").onclick = loadStats;
+el("csvBtn").onclick = exportCsv;
+el("missBtn").onclick = loadStats;
+el("bankBtn").onclick = loadBank;
+el("nextBtn").onclick = function(){ reveal = Math.min(BANK.length, reveal+1); renderBank(); };
+el("resetBtn").onclick = function(){ reveal = 0; renderBank(); };
+
+function applyMode(){
+  var teacher = (location.hash === "#teacher");
+  el("tabsBar").className = teacher ? "tabs" : "tabs hide";
+  if(teacher){
+    el("viewS").className = "hide";
+    el("tabA").click();
+    loadStats();
+  } else {
+    el("viewS").className = "";
+    el("viewA").className = "hide big";
+    el("viewB").className = "hide big";
+    el("viewC").className = "hide";
+  }
+}
+window.addEventListener("hashchange", function(){ location.reload(); });
+applyMode();
+if(location.hash !== "#teacher") bootStudent();
+</script>
+</body>
+</html>
