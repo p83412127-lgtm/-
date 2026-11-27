@@ -32,14 +32,18 @@ function conf_() {
 
 function mode_() { return s_(conf_()["模式"]) === "考試" ? "考試" : "練習"; }
 
+/* 「適用班級」留空＝整份名單都能作答；填了就只比對該班（班級欄要一致）。 */
 function roster_() {
   var sh = ss_().getSheetByName(SH_ROSTER), out = [];
   if (!sh || sh.getLastRow() < 2) return out;
+  var only = s_(conf_()["適用班級"]);
   var v = sh.getDataRange().getValues();
   for (var i = 1; i < v.length; i++) {
     var nm = s_(v[i][1]);
     if (!nm) continue;
-    out.push({ id: s_(v[i][0]), name: nm, cls: s_(v[i][2]) });
+    var cls = s_(v[i][2]);
+    if (only && cls !== only) continue;
+    out.push({ id: s_(v[i][0]), name: nm, cls: cls });
   }
   return out;
 }
@@ -374,7 +378,7 @@ function apiStats_() {
     rosterN: rost.length, rosterIdFilled: idFilled, missing: missing, perQ: perQ,
     mode: mode_(), states: open,
     conf: {
-      pick: s_(c["抽題數"]), cats: s_(c["抽題類別"]),
+      pick: s_(c["抽題數"]), cats: s_(c["抽題類別"]), cls: s_(c["適用班級"]),
       start: s_(c["開放開始時間"]) ? Utilities.formatDate(parseTime_(c["開放開始時間"]), tz, "yyyy/MM/dd HH:mm") : "",
       end: s_(c["開放結束時間"]) ? Utilities.formatDate(parseTime_(c["開放結束時間"]), tz, "yyyy/MM/dd HH:mm") : ""
     },

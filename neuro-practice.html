@@ -426,7 +426,7 @@ function renderStats(d){
   el("statHead").innerHTML =
     '<p><b>已繳交：'+d.n+' 人</b>　名單 '+d.rosterN+' 人　未繳交 '+(d.missing||[]).length+' 人'+
     '<br>全對 '+d.allRight+' 人 ／ 有錯 '+d.someWrong+' 人</p>'+
-    '<p class="note">模式 '+d.mode+'　抽題數 '+d.conf.pick+'　類別 '+(d.conf.cats||"全部")+
+    '<p class="note">模式 '+d.mode+'　適用班級 '+(d.conf.cls||"整份名單")+'　抽題數 '+d.conf.pick+'　類別 '+(d.conf.cats||"全部")+
     '　開放時間 '+((d.conf.start||d.conf.end) ? (d.conf.start||"不限")+" ～ "+(d.conf.end||"不限") : "不限制")+
     '　更新 '+d.updated+'（統計不顯示姓名）</p>';
   var h = "";
