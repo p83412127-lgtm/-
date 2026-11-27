@@ -139,7 +139,7 @@ function pickFor_(seed) {
 
 /***** API *****/
 function apiQuiz_(p) {
-  var id = s_(p.sid), name = s_(p.name);
+  var id = s_(p.xh), name = s_(p.name);
   if (!id) return { ok: false, why: "請填學號" };
   if (!name) return { ok: false, why: "請填姓名" };
   var m = matchRoster_(id, name);
@@ -157,13 +157,13 @@ function apiQuiz_(p) {
 }
 
 function apiStatus_(p) {
-  var id = s_(p.sid), name = s_(p.name), a = answers_();
+  var id = s_(p.xh), name = s_(p.name), a = answers_();
   var r = (id && a.byId[id]) || (name && a.byName[name]) || null;
   return r ? { ok: true, done: true, time: r.time } : { ok: true, done: false };
 }
 
 function apiSubmit_(p) {
-  var id = s_(p.sid), name = s_(p.name);
+  var id = s_(p.xh), name = s_(p.name);
   if (!id || !name) return { ok: false, why: "學號與姓名都要填" };
   var m = matchRoster_(id, name);
   if (!m.ok) return m;

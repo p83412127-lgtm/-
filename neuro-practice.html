@@ -221,7 +221,7 @@ function start(){
   if(!sid){ msg.textContent = "請填學號"; return; }
   if(!nm){ msg.textContent = "請填姓名"; return; }
   msg.textContent = "檢查名單中…";
-  api({action:"quiz", sid:sid, name:nm}).then(function(d){
+  api({action:"quiz", xh:sid, name:nm}).then(function(d){
     if(!d.ok){ msg.textContent = d.why || "無法開始作答"; return; }
     if(d.done){ saveLocal({sid:sid, name:nm, time:d.time}); showDone(nm, d.time); return; }
     if(d.title){ el("ttl").textContent = d.title; document.title = d.title; }
@@ -241,7 +241,7 @@ function submit(){
   var payload = QS.map(function(q,i){ return {no:q.no, a:mine(i)}; });
   el("subBtn").disabled = true;
   msg.textContent = "送出中…";
-  api({action:"submit", sid:sid, name:nm, payload:JSON.stringify(payload), ua:navigator.userAgent})
+  api({action:"submit", xh:sid, name:nm, payload:JSON.stringify(payload), ua:navigator.userAgent})
   .then(function(d){
     if(!d.ok){ msg.textContent = d.why || "送出失敗"; el("subBtn").disabled = false; return; }
     saveLocal({sid:sid, name:nm, time:d.time});
@@ -258,7 +258,7 @@ function bootStudent(){
   if(!L || !L.sid) return;
   el("sid").value = L.sid; el("nm").value = L.name || "";
   showDone(L.name, L.time);
-  api({action:"status", sid:L.sid, name:L.name||""}).then(function(d){
+  api({action:"status", xh:L.sid, name:L.name||""}).then(function(d){
     if(d && d.ok && d.done){ el("doneTime").textContent = d.time; saveLocal({sid:L.sid, name:L.name, time:d.time}); }
     else if(d && d.ok && !d.done){
       el("doneBox").className = "card done hide";
