@@ -1,11 +1,12 @@
-/***** 神經系統練習 後端（綁在「神經系統複習測驗_回覆統計」試算表）*****/
-/* 分頁：題庫 / 班級名單 / 設定 / 練習作答_神經系統
+/***** 神經系統練習／小考 後端（綁在「神經系統複習測驗_回覆統計」試算表）*****/
+/* 分頁：題庫 / 班級名單 / 設定 / 練習作答_神經系統 / 作答狀態
    舊的 warm-up.html、gcs-practice.html 仍走下方的 legacy doPost / doGet（無 action 參數）。 */
 
 var SH_BANK = "題庫";
 var SH_ROSTER = "班級名單";
 var SH_CONF = "設定";
 var SH_ANS = "練習作答_神經系統";
+var SH_STATE = "作答狀態";
 
 function ss_() { return SpreadsheetApp.getActiveSpreadsheet(); }
 function json_(o) {
@@ -15,6 +16,11 @@ function now_() {
   return Utilities.formatDate(new Date(), ss_().getSpreadsheetTimeZone(), "yyyy/MM/dd HH:mm:ss");
 }
 function s_(x) { return (x === null || x === undefined) ? "" : String(x).trim(); }
+function fmt_(x) {
+  return (x instanceof Date)
+    ? Utilities.formatDate(x, ss_().getSpreadsheetTimeZone(), "yyyy/MM/dd HH:mm:ss")
+    : s_(x);
+}
 
 function conf_() {
   var sh = ss_().getSheetByName(SH_CONF), o = {};
@@ -23,6 +29,8 @@ function conf_() {
   for (var i = 1; i < v.length; i++) { var k = s_(v[i][0]); if (k) o[k] = v[i][1]; }
   return o;
 }
+
+function mode_() { return s_(conf_()["模式"]) === "考試" ? "考試" : "練習"; }
 
 function roster_() {
   var sh = ss_().getSheetByName(SH_ROSTER), out = [];
@@ -89,8 +97,9 @@ function parseTime_(x) {
 
 function windowState_() {
   var c = conf_(), a = parseTime_(c["開放開始時間"]), b = parseTime_(c["開放結束時間"]), n = new Date();
-  if (a && n < a) return { ok: false, why: "尚未開放作答（開放時間 " + Utilities.formatDate(a, ss_().getSpreadsheetTimeZone(), "yyyy/MM/dd HH:mm") + " 起）" };
-  if (b && n > b) return { ok: false, why: "作答時間已結束（" + Utilities.formatDate(b, ss_().getSpreadsheetTimeZone(), "yyyy/MM/dd HH:mm") + " 截止）" };
+  var tz = ss_().getSpreadsheetTimeZone();
+  if (a && n < a) return { ok: false, why: "尚未開放作答（開放時間 " + Utilities.formatDate(a, tz, "yyyy/MM/dd HH:mm") + " 起）" };
+  if (b && n > b) return { ok: false, why: "作答時間已結束（" + Utilities.formatDate(b, tz, "yyyy/MM/dd HH:mm") + " 截止）" };
   return { ok: true };
 }
 
@@ -113,16 +122,46 @@ function answers_() {
   for (var i = 1; i < v.length; i++) {
     var id = s_(v[i][1]), nm = s_(v[i][2]);
     if (!id && !nm) continue;
-    var tv = v[i][0];
-    var tstr = (tv instanceof Date)
-      ? Utilities.formatDate(tv, ss_().getSpreadsheetTimeZone(), "yyyy/MM/dd HH:mm:ss")
-      : s_(tv);
-    var r = { time: tstr, id: id, name: nm, right: v[i][4], total: v[i][5], detail: s_(v[i][7]) };
+    var r = { time: fmt_(v[i][0]), id: id, name: nm, right: v[i][4], total: v[i][5], detail: s_(v[i][7]) };
     rows.push(r);
     if (id) byId[id] = r;
     if (nm) byName[nm] = r;
   }
   return { byId: byId, byName: byName, rows: rows };
+}
+
+/***** 作答狀態（考試模式用）*****/
+function stateSheet_() {
+  var ss = ss_(), sh = ss.getSheetByName(SH_STATE);
+  if (!sh) {
+    sh = ss.insertSheet(SH_STATE);
+    sh.appendRow(["學號", "姓名", "狀態", "開始時間", "最後更新", "原因", "解鎖次數"]);
+    sh.setFrozenRows(1);
+  }
+  return sh;
+}
+function states_() {
+  var sh = stateSheet_(), map = {}, rows = [];
+  if (sh.getLastRow() < 2) return { map: map, rows: rows, sh: sh };
+  var v = sh.getDataRange().getValues();
+  for (var i = 1; i < v.length; i++) {
+    var id = s_(v[i][0]);
+    if (!id) continue;
+    var r = {
+      row: i + 1, id: id, name: s_(v[i][1]), st: s_(v[i][2]),
+      start: fmt_(v[i][3]), upd: fmt_(v[i][4]), why: s_(v[i][5]), un: Number(v[i][6] || 0)
+    };
+    map[id] = r; rows.push(r);
+  }
+  return { map: map, rows: rows, sh: sh };
+}
+function setState_(id, name, st, why) {
+  var S = states_(), r = S.map[id], t = now_();
+  if (r) {
+    S.sh.getRange(r.row, 2, 1, 5).setValues([[name || r.name, st, r.start || t, t, why || ""]]);
+  } else {
+    S.sh.appendRow([id, name, st, t, t, why || "", 0]);
+  }
 }
 
 function pickFor_(seed) {
@@ -142,28 +181,80 @@ function pickFor_(seed) {
 }
 
 /***** API *****/
+function apiMode_() {
+  var c = conf_();
+  return { ok: true, mode: mode_(), title: s_(c["測驗名稱"]) || "神經系統練習" };
+}
+
 function apiQuiz_(p) {
   var id = s_(p.xh), name = s_(p.name);
   if (!id) return { ok: false, why: "請填學號" };
   if (!name) return { ok: false, why: "請填姓名" };
   var m = matchRoster_(id, name);
   if (!m.ok) return m;
+
   var a = answers_();
   if (a.byId[id] || a.byName[name]) {
     var r = a.byId[id] || a.byName[name];
     return { ok: true, done: true, time: r.time, why: "這個學號／姓名已經繳交過了" };
   }
+
   var w = windowState_();
   if (!w.ok) return w;
+
+  var mo = mode_();
+  if (mo === "考試") {
+    var S = states_(), st = S.map[id];
+    if (st && st.st === "已失效") {
+      return { ok: false, dead: true, why: "本次作答已失效（" + (st.why || "離開頁面") + "）。請找老師解除鎖定後重新作答。" };
+    }
+    if (st && st.st === "進行中") {
+      setState_(id, name, "已失效", "重新整理或重新開啟頁面");
+      return { ok: false, dead: true, why: "考試模式下頁面只能開啟一次。偵測到重新開啟，本次作答已失效，請找老師解除鎖定。" };
+    }
+    setState_(id, name, "進行中", "");
+  }
+
   var qs = pickFor_(id);
   if (!qs.length) return { ok: false, why: "題庫沒有符合條件的啟用題目" };
-  return { ok: true, done: false, name: name, cls: m.cls, loose: !!m.loose, title: s_(conf_()["測驗名稱"]) || "神經系統練習", qs: qs };
+  return {
+    ok: true, done: false, mode: mo, name: name, cls: m.cls, loose: !!m.loose,
+    title: s_(conf_()["測驗名稱"]) || "神經系統練習", qs: qs
+  };
 }
 
 function apiStatus_(p) {
   var id = s_(p.xh), name = s_(p.name), a = answers_();
   var r = (id && a.byId[id]) || (name && a.byName[name]) || null;
-  return r ? { ok: true, done: true, time: r.time } : { ok: true, done: false };
+  if (r) return { ok: true, done: true, time: r.time };
+  if (mode_() === "考試" && id) {
+    var st = states_().map[id];
+    if (st && st.st === "已失效") return { ok: true, done: false, dead: true, why: st.why };
+  }
+  return { ok: true, done: false };
+}
+
+function apiVoid_(p) {
+  var id = s_(p.xh), name = s_(p.name), why = s_(p.why) || "離開頁面";
+  if (!id) return { ok: false, why: "缺少學號" };
+  if (mode_() !== "考試") return { ok: true, ignored: true, why: "練習模式不處理" };
+  var a = answers_();
+  if (a.byId[id] || a.byName[name]) return { ok: true, ignored: true, why: "已繳交，不處理" };
+  var st = states_().map[id];
+  if (st && st.st === "已失效") return { ok: true, already: true };
+  setState_(id, name, "已失效", why);
+  return { ok: true, dead: true };
+}
+
+function apiUnlock_(p) {
+  var id = s_(p.xh);
+  if (!id) return { ok: false, why: "請提供學號" };
+  var S = states_(), r = S.map[id];
+  if (!r) return { ok: false, why: "查無這個學號的作答狀態紀錄" };
+  if (r.st === "已繳交") return { ok: false, why: "這個學號已經繳交完成，不需要解鎖" };
+  S.sh.getRange(r.row, 3, 1, 4).setValues([["已解鎖", r.start, now_(), "老師解除鎖定"]]);
+  S.sh.getRange(r.row, 7).setValue(r.un + 1);
+  return { ok: true, why: "已解除鎖定：" + id + "（" + r.name + "）可以重新作答" };
 }
 
 function apiSubmit_(p) {
@@ -186,6 +277,15 @@ function apiSubmit_(p) {
       var old = a.byId[id] || a.byName[name];
       return { ok: true, done: true, time: old.time, why: "這個學號／姓名已經繳交過了，不能重複送出" };
     }
+
+    if (mode_() === "考試") {
+      var st = states_().map[id];
+      if (!st) return { ok: false, dead: true, why: "找不到你的作答階段紀錄，無法交卷。請找老師處理。" };
+      if (st.st === "已失效") {
+        return { ok: false, dead: true, why: "本次作答已失效（" + (st.why || "離開頁面") + "），無法交卷。請找老師解除鎖定。" };
+      }
+    }
+
     var b = bank_(), map = {};
     b.forEach(function (x) { map[x.no] = x; });
 
@@ -209,6 +309,7 @@ function apiSubmit_(p) {
     var t = now_();
     sh.appendRow([t, id, name, m.cls, right, nos.length, nos.join(","), JSON.stringify(detail),
       s_(p.ua).slice(0, 300), m.loose ? "名單未填學號，僅比對姓名" : ""]);
+    if (mode_() === "考試") setState_(id, name, "已繳交", "");
     return { ok: true, done: true, time: t };
   } finally {
     lock.releaseLock();
@@ -248,27 +349,35 @@ function apiStats_() {
     if (r.name) done[r.name] = 1;
     if (Number(r.right) === Number(r.total)) allRight++; else someWrong++;
   });
-  var missing = [];
-  roster_().forEach(function (p) {
+
+  var rost = roster_(), missing = [], idFilled = 0;
+  rost.forEach(function (p) {
+    if (p.id) idFilled++;
     if (done[p.name] || (p.id && done[p.id])) return;
     missing.push(p.name);
   });
 
-  var c = conf_();
+  var S = states_();
+  var open = S.rows.filter(function (r) { return r.st !== "已繳交"; }).map(function (r) {
+    return { id: r.id, name: r.name, st: r.st, start: r.start, upd: r.upd, why: r.why, un: r.un };
+  });
+
+  var c = conf_(), tz = ss_().getSpreadsheetTimeZone();
   return {
     ok: true, n: a.rows.length, allRight: allRight, someWrong: someWrong,
-    rosterN: roster_().length, missing: missing, perQ: perQ,
+    rosterN: rost.length, rosterIdFilled: idFilled, missing: missing, perQ: perQ,
+    mode: mode_(), states: open,
     conf: {
       pick: s_(c["抽題數"]), cats: s_(c["抽題類別"]),
-      start: s_(c["開放開始時間"]) ? Utilities.formatDate(parseTime_(c["開放開始時間"]), ss_().getSpreadsheetTimeZone(), "yyyy/MM/dd HH:mm") : "",
-      end: s_(c["開放結束時間"]) ? Utilities.formatDate(parseTime_(c["開放結束時間"]), ss_().getSpreadsheetTimeZone(), "yyyy/MM/dd HH:mm") : ""
+      start: s_(c["開放開始時間"]) ? Utilities.formatDate(parseTime_(c["開放開始時間"]), tz, "yyyy/MM/dd HH:mm") : "",
+      end: s_(c["開放結束時間"]) ? Utilities.formatDate(parseTime_(c["開放結束時間"]), tz, "yyyy/MM/dd HH:mm") : ""
     },
     updated: now_()
   };
 }
 
 function apiBank_() {
-  return { ok: true, items: bank_(), conf: conf_()["抽題類別"] ? s_(conf_()["抽題類別"]) : "" };
+  return { ok: true, items: bank_() };
 }
 
 /***** 入口 *****/
@@ -277,9 +386,12 @@ function doGet(e) {
   var act = s_(p.action);
   if (!act) return legacyStats_(s_(p.sheet));
   try {
+    if (act === "mode") return json_(apiMode_());
     if (act === "quiz") return json_(apiQuiz_(p));
     if (act === "submit") return json_(apiSubmit_(p));
     if (act === "status") return json_(apiStatus_(p));
+    if (act === "void") return json_(apiVoid_(p));
+    if (act === "unlock") return json_(apiUnlock_(p));
     if (act === "stats") return json_(apiStats_());
     if (act === "bank") return json_(apiBank_());
     return json_({ ok: false, why: "未知的 action：" + act });

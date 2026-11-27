@@ -28,11 +28,13 @@ input[type=text]{width:100%;padding:8px;border:1px solid var(--line);border-radi
 .opt[disabled]{cursor:default;opacity:.85}
 .btn{background:var(--acc);color:#fff;border:0;border-radius:8px;padding:9px 18px;font-size:16px;cursor:pointer;margin-top:10px}
 .btn.alt{background:#faf7f4;color:#7a5f5b;border:2px solid var(--acc)}
+.btn.sm{padding:4px 12px;font-size:14px;margin:0}
 .btn[disabled]{opacity:.6;cursor:default}
 .ans{margin-top:10px;padding:10px;border-radius:8px;background:var(--light)}
 .ok{color:var(--ok);font-weight:bold}.bad{color:var(--bad);font-weight:bold}
 .done{text-align:center;padding:26px 16px}
 .done .tick{font-size:46px;color:var(--ok);line-height:1}
+.done.dead .tick{color:var(--bad)}
 .done h2{font-size:26px;margin:8px 0 4px;color:var(--gray)}
 table{border-collapse:collapse;width:100%;margin-top:8px;font-size:15px}
 th,td{border:1px solid var(--line);padding:6px 8px;text-align:center}
@@ -48,7 +50,9 @@ td.l{text-align:left}
 .names span{border:1px solid var(--line);background:#faf7f4;border-radius:6px;padding:3px 8px;font-size:15px}
 .hide{display:none}
 .note{font-size:13px;color:#777}
-.warn{font-size:13px;color:#8a6f52;background:#f5efe7;border:1px solid #e2d6c6;border-radius:8px;padding:8px 10px;margin-top:8px}
+.warn{border:2px solid var(--acc);background:#f7f0ee;border-radius:12px;padding:14px 16px;margin:14px 0}
+.warn h3{margin:0 0 6px;font-size:18px;color:#7a5f5b}
+.flag{border:1px solid #d8c7a8;background:#f7f1e4;border-radius:10px;padding:10px 14px;margin:10px 0;font-size:15px;color:#7a6440}
 .big .case{font-size:24px}.big .card h2{font-size:26px}.big .ans{font-size:21px}
 svg{width:100%;height:auto;display:block}
 </style>
@@ -59,14 +63,26 @@ svg{width:100%;height:auto;display:block}
 <div class="sub" id="sub">每人題目與選項順序不同；答案由老師在課堂上公布</div>
 </header>
 <main>
+<div id="flagBox"></div>
+
 <div class="tabs hide" id="tabsBar">
 <button id="tabA" class="on">填答統計</button>
 <button id="tabB">題目與答案（投影）</button>
 <button id="tabC">未繳交名單</button>
+<button id="tabD">考試狀態／解鎖</button>
 </div>
 
 <!-- ===== 學生頁 ===== -->
 <section id="viewS">
+  <div id="examWarn" class="warn hide">
+    <h3>⚠ 本次為「考試模式」</h3>
+    <div>這個頁面<b>只能開啟一次</b>。一旦你離開這個頁面 —— 切換到其他分頁或 App、按上一頁、重新整理、或關掉頁面 —— <b>本次作答就會失效，無法交卷</b>。</div>
+    <div style="margin-top:6px">請先把其他 App 關掉、把手機通知關靜音，確定可以一次作答完再開始。如果真的被通知或來電打斷，請舉手告訴老師，老師可以幫你解除鎖定重新作答。</div>
+    <label style="display:flex;align-items:center;gap:8px;margin-top:10px;font-weight:normal;color:var(--gray)">
+      <input type="checkbox" id="agree" style="width:18px;height:18px"> 我已了解上面的規則
+    </label>
+  </div>
+
   <div id="identBox" class="card">
     <h2><span>開始作答</span></h2>
     <div class="row">
@@ -77,13 +93,22 @@ svg{width:100%;height:auto;display:block}
     <span class="note" id="identMsg"></span>
     <div class="note" style="margin-top:8px">學號與姓名都要對得上班級名單才能作答；一個學號只能繳交一次。</div>
   </div>
+
   <div id="quizBox"></div>
+
   <div id="doneBox" class="card done hide">
     <div class="tick">✓</div>
     <h2>答案已繳交</h2>
     <div id="doneWho" class="note"></div>
     <div style="font-size:18px;margin-top:6px">繳交時間：<b id="doneTime">—</b></div>
     <p class="note" style="margin-top:12px">不能再修改或重複送出。分數與正確答案不在這裡顯示，由老師在課堂上公布。</p>
+  </div>
+
+  <div id="deadBox" class="card done dead hide">
+    <div class="tick">✕</div>
+    <h2>本次作答已失效</h2>
+    <div id="deadWhy" style="font-size:17px;margin-top:6px"></div>
+    <p class="note" style="margin-top:12px">請舉手告訴老師，老師可以在老師頁面幫你解除鎖定，解除後就能重新作答。</p>
   </div>
 </section>
 
@@ -122,6 +147,20 @@ svg{width:100%;height:auto;display:block}
     <div class="note" style="margin-top:8px">對照「班級名單」分頁，列出還沒繳交的人。統計區不顯示任何人答了什麼。</div>
   </div>
 </section>
+
+<!-- ===== 老師：考試狀態／解鎖 ===== -->
+<section id="viewD" class="hide">
+  <div class="card">
+    <h2><span>考試狀態／解鎖</span></h2>
+    <button class="btn" id="stateBtn">更新狀態</button>
+    <span class="note" id="stateMsg"></span>
+    <div id="stateBox"></div>
+    <div class="note" style="margin-top:10px">
+      手機跳出通知、來電、螢幕自動鎖定、切換輸入法、瀏覽器自動重載，都可能讓學生被誤判失效。
+      誤判時按「解除鎖定」，該學號就能重新作答（題目與選項順序和上次一樣）。
+    </div>
+  </div>
+</section>
 </main>
 
 <script>
@@ -133,16 +172,19 @@ var LSKEY = "neuro_practice_v1";
 var LET = ["A","B","C","D","E","F"];
 var COLORS = ["#9c7e7a","#8f9e8b","#b8a58c","#8a9aa8","#b79ab0","#c4b6a6","#7c8c86"];
 var QS = [], picked = {}, lastStats = null, reveal = 0, BANK = [];
+var MODE = "", SID = "", NM = "", submitted = false, guardArmed = false, guardFired = false;
 
 function esc(s){ return String(s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];}); }
 function el(id){ return document.getElementById(id); }
 
-function api(params){
-  if(!SUBMIT_URL) return Promise.reject(new Error("老師尚未設定送出網址"));
-  var u = SUBMIT_URL + "?" + Object.keys(params).map(function(k){
+function qstr(params){
+  return Object.keys(params).map(function(k){
     return encodeURIComponent(k) + "=" + encodeURIComponent(params[k]);
   }).join("&");
-  return fetch(u).then(function(r){
+}
+function api(params){
+  if(!SUBMIT_URL) return Promise.reject(new Error("老師尚未設定送出網址"));
+  return fetch(SUBMIT_URL + "?" + qstr(params)).then(function(r){
     return r.text().then(function(t){
       var d;
       try { d = JSON.parse(t); }
@@ -156,15 +198,48 @@ function api(params){
 function saveLocal(o){ try{ localStorage.setItem(LSKEY, JSON.stringify(o)); }catch(e){} }
 function readLocal(){ try{ return JSON.parse(localStorage.getItem(LSKEY) || "null"); }catch(e){ return null; } }
 
-/* ===== 學生頁 ===== */
+/* ===== 畫面切換 ===== */
 function showDone(who, time){
+  el("examWarn").className = "warn hide";
   el("identBox").className = "card hide";
   el("quizBox").innerHTML = "";
+  el("deadBox").className = "card done dead hide";
   el("doneBox").className = "card done";
   el("doneWho").textContent = who || "";
   el("doneTime").textContent = time || "—";
 }
+function showDead(why){
+  el("examWarn").className = "warn hide";
+  el("identBox").className = "card hide";
+  el("quizBox").innerHTML = "";
+  el("doneBox").className = "card done hide";
+  el("deadBox").className = "card done dead";
+  el("deadWhy").textContent = why || "離開了作答頁面。";
+}
 
+/* ===== 考試模式守門 ===== */
+function reportVoid(why){
+  try{
+    fetch(SUBMIT_URL + "?" + qstr({action:"void", xh:SID, name:NM, why:why}), {keepalive:true});
+  }catch(e){}
+}
+function fireGuard(why){
+  if(MODE !== "考試" || !guardArmed || guardFired || submitted) return;
+  guardFired = true;
+  reportVoid(why);
+  showDead("偵測到你離開了作答頁面（" + why + "），本次作答已失效。");
+}
+function armGuard(){
+  if(MODE !== "考試") return;
+  setTimeout(function(){ guardArmed = true; }, 1500);
+  document.addEventListener("visibilitychange", function(){
+    if(document.visibilityState === "hidden") fireGuard("切換分頁或離開頁面");
+  });
+  window.addEventListener("blur", function(){ fireGuard("視窗失去焦點"); });
+  window.addEventListener("pagehide", function(){ fireGuard("關閉或離開頁面"); });
+}
+
+/* ===== 學生頁 ===== */
 function renderQuiz(){
   picked = {};
   QS.forEach(function(q,i){ picked[i] = q.multi ? [] : null; });
@@ -209,7 +284,7 @@ function mine(i){
   return picked[i] === null ? [] : [q.opts[picked[i]]];
 }
 function copyMine(){
-  var out = el("sid").value.trim() + " " + el("nm").value.trim() + "｜" +
+  var out = SID + " " + NM + "｜" +
     QS.map(function(q,i){ var a = mine(i); return "題"+(i+1)+" "+(a.length?a.join("＋"):"未答"); }).join("｜");
   var msg = el("subMsg");
   if(navigator.clipboard){ navigator.clipboard.writeText(out).then(function(){ msg.textContent = "已複製"; }, function(){ msg.textContent = out; }); }
@@ -220,32 +295,40 @@ function start(){
   var sid = el("sid").value.trim(), nm = el("nm").value.trim(), msg = el("identMsg");
   if(!sid){ msg.textContent = "請填學號"; return; }
   if(!nm){ msg.textContent = "請填姓名"; return; }
+  if(MODE === "考試" && !el("agree").checked){ msg.textContent = "請先勾選「我已了解上面的規則」"; return; }
+  SID = sid; NM = nm;
   msg.textContent = "檢查名單中…";
   api({action:"quiz", xh:sid, name:nm}).then(function(d){
+    if(d.dead){ showDead(d.why || "本次作答已失效。"); return; }
     if(!d.ok){ msg.textContent = d.why || "無法開始作答"; return; }
     if(d.done){ saveLocal({sid:sid, name:nm, time:d.time}); showDone(nm, d.time); return; }
     if(d.title){ el("ttl").textContent = d.title; document.title = d.title; }
+    if(d.mode) MODE = d.mode;
     QS = d.qs || [];
     msg.textContent = "";
+    el("examWarn").className = "warn hide";
     el("identBox").querySelectorAll("input").forEach(function(x){ x.disabled = true; });
     el("startBtn").disabled = true;
     renderQuiz();
+    armGuard();
   }, function(e){ msg.textContent = "連線失敗：" + e.message; });
 }
 
 function submit(){
-  var msg = el("subMsg"), sid = el("sid").value.trim(), nm = el("nm").value.trim();
+  var msg = el("subMsg");
   var miss = [];
   QS.forEach(function(q,i){ if(!mine(i).length) miss.push(i+1); });
   if(miss.length){ msg.textContent = "還有題目沒答：第 " + miss.join("、") + " 題"; return; }
   var payload = QS.map(function(q,i){ return {no:q.no, a:mine(i)}; });
   el("subBtn").disabled = true;
   msg.textContent = "送出中…";
-  api({action:"submit", xh:sid, name:nm, payload:JSON.stringify(payload), ua:navigator.userAgent})
+  api({action:"submit", xh:SID, name:NM, payload:JSON.stringify(payload), ua:navigator.userAgent})
   .then(function(d){
+    if(d.dead){ showDead(d.why || "本次作答已失效，無法交卷。"); return; }
     if(!d.ok){ msg.textContent = d.why || "送出失敗"; el("subBtn").disabled = false; return; }
-    saveLocal({sid:sid, name:nm, time:d.time});
-    showDone(nm, d.time);
+    submitted = true;
+    saveLocal({sid:SID, name:NM, time:d.time});
+    showDone(NM, d.time);
   }, function(e){
     msg.textContent = "送出失敗（" + e.message + "），請改按「複製我的作答」交給老師";
     el("subBtn").disabled = false;
@@ -254,17 +337,30 @@ function submit(){
 
 function bootStudent(){
   el("startBtn").onclick = start;
+  api({action:"mode"}).then(function(d){
+    if(d && d.ok){
+      MODE = d.mode;
+      if(d.title){ el("ttl").textContent = d.title; document.title = d.title; }
+      if(MODE === "考試"){
+        el("examWarn").className = "warn";
+        el("sub").textContent = "考試模式：頁面只能開啟一次，離開頁面即無法交卷";
+      }
+    }
+  }, function(){});
+
   var L = readLocal();
   if(!L || !L.sid) return;
-  el("sid").value = L.sid; el("nm").value = L.name || "";
-  showDone(L.name, L.time);
-  api({action:"status", xh:L.sid, name:L.name||""}).then(function(d){
-    if(d && d.ok && d.done){ el("doneTime").textContent = d.time; saveLocal({sid:L.sid, name:L.name, time:d.time}); }
-    else if(d && d.ok && !d.done){
-      el("doneBox").className = "card done hide";
-      el("identBox").className = "card";
-      el("identMsg").textContent = "試算表沒有你的紀錄，請重新作答一次";
-    }
+  SID = L.sid; NM = L.name || "";
+  el("sid").value = L.sid; el("nm").value = NM;
+  showDone(NM, L.time);
+  api({action:"status", xh:L.sid, name:NM}).then(function(d){
+    if(!d || !d.ok) return;
+    if(d.done){ el("doneTime").textContent = d.time; saveLocal({sid:L.sid, name:NM, time:d.time}); return; }
+    if(d.dead){ showDead("本次作答已失效（" + (d.why || "離開頁面") + "）。"); return; }
+    el("doneBox").className = "card done hide";
+    el("identBox").className = "card";
+    if(MODE === "考試") el("examWarn").className = "warn";
+    el("identMsg").textContent = "試算表沒有你的紀錄，請重新作答一次";
   }, function(){});
 }
 
@@ -285,12 +381,28 @@ function pieSvg(counts, keys){
   return out + '</svg>';
 }
 
+function renderFlags(d){
+  var h = "";
+  if(d.rosterN && d.rosterIdFilled === 0){
+    h += '<div class="flag"><b>⚠ 班級名單的「學號」欄目前是空的。</b>'+
+         '現在只用姓名比對身分，請提供含學號的學生名單並貼進「班級名單」分頁，才能啟用學號＋姓名的嚴格比對。'+
+         '（名單 '+d.rosterN+' 人，已填學號 0 人）</div>';
+  } else if(d.rosterN && d.rosterIdFilled < d.rosterN){
+    h += '<div class="flag"><b>部分名單缺學號：</b>名單 '+d.rosterN+' 人，只有 '+d.rosterIdFilled+' 人填了學號。'+
+         '沒填學號的那幾列只會比對姓名。</div>';
+  }
+  if(d.mode === "考試"){
+    h += '<div class="flag">目前是<b>考試模式</b>：學生頁面只能開一次，離開頁面即失效。誤判可在「考試狀態／解鎖」分頁解除。</div>';
+  }
+  el("flagBox").innerHTML = h;
+}
+
 function renderStats(d){
   lastStats = d;
   el("statHead").innerHTML =
     '<p><b>已繳交：'+d.n+' 人</b>　名單 '+d.rosterN+' 人　未繳交 '+(d.missing||[]).length+' 人'+
     '<br>全對 '+d.allRight+' 人 ／ 有錯 '+d.someWrong+' 人</p>'+
-    '<p class="note">抽題數 '+d.conf.pick+'　類別 '+(d.conf.cats||"全部")+
+    '<p class="note">模式 '+d.mode+'　抽題數 '+d.conf.pick+'　類別 '+(d.conf.cats||"全部")+
     '　開放時間 '+((d.conf.start||d.conf.end) ? (d.conf.start||"不限")+" ～ "+(d.conf.end||"不限") : "不限制")+
     '　更新 '+d.updated+'（統計不顯示姓名）</p>';
   var h = "";
@@ -311,23 +423,58 @@ function renderStats(d){
   el("stats").innerHTML = h || '<p class="note">還沒有人繳交。</p>';
 }
 
-function loadStats(){
-  var msg = el("statMsg");
-  msg.textContent = "讀取中…";
-  api({action:"stats"}).then(function(d){
-    if(!d.ok){ msg.textContent = "讀取失敗：" + (d.why||"後端回了錯誤"); return; }
-    renderStats(d);
-    renderMissing(d);
-    msg.textContent = "已更新 " + new Date().toLocaleTimeString("zh-TW");
-  }, function(e){ msg.textContent = "讀取失敗：" + e.message; });
-}
-
 function renderMissing(d){
   var m = d.missing || [];
   el("missBox").innerHTML = '<p><b>未繳交 '+m.length+' 人</b>（名單 '+d.rosterN+' 人，已繳交 '+d.n+' 人）</p>'+
     (m.length ? '<div class="names">'+m.map(function(x){ return '<span>'+esc(x)+'</span>'; }).join('')+'</div>'
               : '<p class="ok">全班都繳交了。</p>');
   el("missMsg").textContent = "已更新 " + (d.updated || "");
+}
+
+function renderStates(d){
+  var st = d.states || [];
+  var h = '<p>模式：<b>'+d.mode+'</b>　目前有狀態紀錄 '+st.length+' 筆</p>';
+  if(!st.length){
+    h += '<p class="note">還沒有人開始作答，或沒有人被鎖定。</p>';
+  } else {
+    h += '<table><tr><th>學號</th><th>姓名</th><th>狀態</th><th>開始</th><th>最後更新</th><th>原因</th><th>已解鎖次數</th><th>動作</th></tr>';
+    st.forEach(function(r){
+      var cls = r.st === "已失效" ? ' style="color:#a8686a;font-weight:bold"' : '';
+      h += '<tr><td>'+esc(r.id)+'</td><td>'+esc(r.name)+'</td><td'+cls+'>'+esc(r.st)+'</td>'+
+           '<td>'+esc(r.start)+'</td><td>'+esc(r.upd)+'</td><td class="l">'+esc(r.why||"")+'</td><td>'+r.un+'</td>'+
+           '<td>'+(r.st==="已失效" ? '<button class="btn sm unlock" data-id="'+esc(r.id)+'">解除鎖定</button>' : '—')+'</td></tr>';
+    });
+    h += '</table>';
+  }
+  el("stateBox").innerHTML = h;
+  el("stateBox").querySelectorAll("button.unlock").forEach(function(b){
+    b.onclick = function(){
+      b.disabled = true;
+      el("stateMsg").textContent = "解鎖中…";
+      api({action:"unlock", xh:b.getAttribute("data-id")}).then(function(d2){
+        el("stateMsg").textContent = d2.why || (d2.ok ? "已解鎖" : "解鎖失敗");
+        loadStats();
+      }, function(e){ el("stateMsg").textContent = "解鎖失敗：" + e.message; b.disabled = false; });
+    };
+  });
+}
+
+function loadStats(){
+  var msg = el("statMsg");
+  msg.textContent = "讀取中…";
+  el("stateMsg").textContent = "讀取中…";
+  api({action:"stats"}).then(function(d){
+    if(!d.ok){ msg.textContent = "讀取失敗：" + (d.why||"後端回了錯誤"); return; }
+    renderFlags(d);
+    renderStats(d);
+    renderMissing(d);
+    renderStates(d);
+    msg.textContent = "已更新 " + new Date().toLocaleTimeString("zh-TW");
+    el("stateMsg").textContent = "已更新 " + (d.updated || "");
+  }, function(e){
+    msg.textContent = "讀取失敗：" + e.message;
+    el("stateMsg").textContent = "讀取失敗：" + e.message;
+  });
 }
 
 function exportCsv(){
@@ -345,6 +492,9 @@ function exportCsv(){
   L.push([]);
   L.push(["未繳交名單"]);
   (d.missing||[]).forEach(function(x){ L.push([x]); });
+  L.push([]);
+  L.push(["作答狀態","學號","姓名","狀態","原因"]);
+  (d.states||[]).forEach(function(r){ L.push(["", r.id, r.name, r.st, r.why||""]); });
   var csv = "﻿" + L.map(function(r){
     return r.map(function(c){ return '"' + String(c === undefined ? "" : c).replace(/"/g,'""') + '"'; }).join(",");
   }).join("\r\n");
@@ -377,7 +527,7 @@ function loadBank(){
 }
 
 /* ===== 分頁 ===== */
-var tabs = {tabA:"viewA", tabB:"viewB", tabC:"viewC"};
+var tabs = {tabA:"viewA", tabB:"viewB", tabC:"viewC", tabD:"viewD"};
 Object.keys(tabs).forEach(function(k){
   el(k).onclick = function(){
     Object.keys(tabs).forEach(function(j){
@@ -392,6 +542,7 @@ Object.keys(tabs).forEach(function(k){
 el("statBtn").onclick = loadStats;
 el("csvBtn").onclick = exportCsv;
 el("missBtn").onclick = loadStats;
+el("stateBtn").onclick = loadStats;
 el("bankBtn").onclick = loadBank;
 el("nextBtn").onclick = function(){ reveal = Math.min(BANK.length, reveal+1); renderBank(); };
 el("resetBtn").onclick = function(){ reveal = 0; renderBank(); };
@@ -408,6 +559,7 @@ function applyMode(){
     el("viewA").className = "hide big";
     el("viewB").className = "hide big";
     el("viewC").className = "hide";
+    el("viewD").className = "hide";
   }
 }
 window.addEventListener("hashchange", function(){ location.reload(); });
